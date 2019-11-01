@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/map_bubble"
+    android:paddingRight="3dp"
+    android:paddingLeft="3dp"
+    android:paddingTop="3dp"
+    android:paddingBottom="13dp"
+    >
+        <ImageView
+            android:id="@+id/mapMarker_imageView"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center"
+            android:adjustViewBounds="true"
+            android:scaleType="centerCrop"
+            />
+        <TextView
+            android:id="@+id/mapMarker_textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:gravity="center"
+            android:background="#000000"
+            android:text="3"
+            android:textColor="#FFFFFF"
+            android:textSize="14dp" />
+</FrameLayout>

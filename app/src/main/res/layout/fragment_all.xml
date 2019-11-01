@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <com.example.galleryproject.TopCalendarLayout
+        android:id="@+id/topCalendar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/allRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#F2F2F2"
+            android:paddingLeft="3dp"
+            android:paddingRight="3dp"
+            android:scrollbars="vertical"
+            app:layoutManager="GridLayoutManager" />
+
+        <com.example.galleryproject.BottomCalendarLayout
+            android:id="@+id/bottomCalendar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top" />
+
+    </FrameLayout>
+</LinearLayout>
