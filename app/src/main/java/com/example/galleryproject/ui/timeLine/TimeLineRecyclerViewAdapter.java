@@ -17,20 +17,22 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.galleryproject.Model.ImageGroup;
 import com.example.galleryproject.PhotoGroupActivity;
 import com.example.galleryproject.R;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import xyz.sangcomz.stickytimelineview.TimeLineRecyclerView;
 
 public class TimeLineRecyclerViewAdapter extends TimeLineRecyclerView.Adapter<TimeLineRecyclerViewAdapter.TimeLineRecyclerViewHolder> {
-    private ArrayList<PhotoGroup> photoGroups;
+    private List<ImageGroup> imageGroups;
     private Context context;
 
-    public TimeLineRecyclerViewAdapter(Context context, ArrayList<PhotoGroup> photoGroups) {
+    public TimeLineRecyclerViewAdapter(Context context, List<ImageGroup> imageGroups) {
         this.context = context;
-        this.photoGroups = photoGroups;
+        this.imageGroups = imageGroups;
     }
 
     public class TimeLineRecyclerViewHolder extends RecyclerView.ViewHolder {
@@ -41,16 +43,15 @@ public class TimeLineRecyclerViewAdapter extends TimeLineRecyclerView.Adapter<Ti
             super(itemView);
             timeLineMemo = (TextView) itemView.findViewById(R.id.timeLineMemo);
             timeLine_Image_RecyclerView = (RecyclerView) itemView.findViewById(R.id.timeLine_Image_RecyclerView);
-            itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    int position = getAdapterPosition();
-                    if(position != RecyclerView.NO_POSITION){
-                        PhotoGroup photoGroup = photoGroups.get(position);
-                        Intent intent = new Intent(context, PhotoGroupActivity.class);
-                        intent.putExtra("PhotoGroup", photoGroup);
-                        context.startActivity(intent);
-                    }
+            itemView.setOnClickListener((View view) -> {
+                int position = getAdapterPosition();
+
+                if(position != RecyclerView.NO_POSITION){
+                    ImageGroup imageGroup = imageGroups.get(position);
+
+                    Intent intent = new Intent(context, PhotoGroupActivity.class);
+                    intent.putExtra("ImageGroup", imageGroup);
+                    context.startActivity(intent);
                 }
             });
         }
@@ -69,7 +70,7 @@ public class TimeLineRecyclerViewAdapter extends TimeLineRecyclerView.Adapter<Ti
 
     @Override
     public void onBindViewHolder(@NonNull TimeLineRecyclerViewHolder holder, int position) {
-        ArrayList<String> paths = photoGroups.get(position).getFilePaths();
+        List<String> paths = imageGroups.get(position).getFilePaths();
 
         TimeLineHorizontalAdapter adapter = new TimeLineHorizontalAdapter(context, paths);
         holder.timeLine_Image_RecyclerView.setHasFixedSize(true);
@@ -81,65 +82,84 @@ public class TimeLineRecyclerViewAdapter extends TimeLineRecyclerView.Adapter<Ti
         holder.timeLine_Image_RecyclerView.addItemDecoration(decorator);
 
 //        holder.timeLineMemo.setText(photoGroups.get(position).getMemo());
-        setReadMore(holder.timeLineMemo, photoGroups.get(position).getMemo(), 2);
+        setReadMore(holder.timeLineMemo, imageGroups.get(position).getMemo(), 2);
     }
 
     @Override
     public int getItemCount() {
-        return photoGroups.size();
+        return imageGroups.size();
     }
 
     public static void setReadMore(final TextView view, final String text, final int maxLine) {
         final Context context = view.getContext();
         final String expanedText = " ... 더보기";
 
-        if (view.getTag() != null && view.getTag().equals(text)) { //Tag로 전값 의 text를 비교하여똑같으면 실행하지 않음.
+        // Tag로 이전 값의 text를 비교하여 똑같으면 실행하지 않음.
+        if (view.getTag() != null && view.getTag().equals(text)) {
             return;
         }
-        view.setTag(text); //Tag에 text 저장
-        view.setText(text); // setText를 미리 하셔야  getLineCount()를 호출가능
-        view.post(new Runnable() { //getLineCount()는 UI 백그라운드에서만 가져올수 있음
-            @Override
-            public void run() {
-                if (view.getLineCount() >= maxLine) { //Line Count가 설정한 MaxLine의 값보다 크다면 처리시작
 
-                    int lineEndIndex = view.getLayout().getLineVisibleEnd(maxLine - 1); //Max Line 까지의 text length
+        view.setTag(text);
 
-                    String[] split = text.split("\n"); //text를 자름
-                    int splitLength = 0;
+        // setText를 미리 하셔야  getLineCount()를 호출가능
+        view.setText(text);
 
-                    String lessText = "";
-                    for (String item : split) {
-                        splitLength += item.length() + 1;
-                        if (splitLength >= lineEndIndex) { //마지막 줄일때!
-                            if (item.length() >= expanedText.length()) {
-                                lessText += item.substring(0, item.length() - (expanedText.length())) + expanedText;
-                            } else {
-                                lessText += item + expanedText;
-                            }
-                            break; //종료
+        // getLineCount()는 UI 백그라운드에서만 가져올수 있음
+        view.post(() -> {
+
+            // Line Count가 설정한 MaxLine의 값보다 크다면 처리시작
+            if (view.getLineCount() >= maxLine) {
+
+                // Max Line 까지의 text length
+                int lineEndIndex = view.getLayout().getLineVisibleEnd(maxLine - 1);
+
+                // text를 자름
+                String[] split = text.split("\n");
+                int splitLength = 0;
+
+                StringBuffer lessText = new StringBuffer();
+                for (String item : split) {
+                    splitLength += item.length() + 1;
+
+                    // 마지막 줄일때!
+                    if (splitLength >= lineEndIndex) {
+                        if (item.length() >= expanedText.length()) {
+                            lessText.append(item.substring(0, item.length() - (expanedText.length())) + expanedText);
+                        } else {
+                            lessText.append(item + expanedText);
                         }
-                        lessText += item + "\n";
+
+                        //종료
+                        break;
                     }
-                    SpannableString spannableString = new SpannableString(lessText);
-                    spannableString.setSpan(new ClickableSpan() {//클릭이벤트
-                        @Override
-                        public void onClick(View v) {
-                            view.setText(text);
-                        }
-
-                        @Override
-                        public void updateDrawState(TextPaint ds) { //컬러 처리
-                            ds.setColor(ContextCompat.getColor(context, R.color.colorPrimaryDark));
-                        }
-                    }, spannableString.length() - expanedText.length(), spannableString.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    view.setText(spannableString);
-                    view.setMovementMethod(LinkMovementMethod.getInstance());
+                    lessText.append(item + "\n");
                 }
+
+
+
+                ClickableSpan clickableSpan = new ClickableSpan() {
+                    // 클릭 이벤트 리스너
+                    @Override
+                    public void onClick(View v) {
+                        view.setText(text);
+                    }
+
+                    // 컬러 처리
+                    @Override
+                    public void updateDrawState(TextPaint ds) {
+                        ds.setColor(ContextCompat.getColor(context, R.color.colorPrimaryDark));
+                    }
+                };
+
+                SpannableString spannableString = new SpannableString(lessText);
+                spannableString.setSpan(clickableSpan,
+                        spannableString.length() - expanedText.length(),
+                        spannableString.length(),
+                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                view.setText(spannableString);
+                view.setMovementMethod(LinkMovementMethod.getInstance());
             }
         });
-
-
     }
-
 }
