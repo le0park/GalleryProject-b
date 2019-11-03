@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.example.galleryproject.BottomCalendarLayout;
 import com.example.galleryproject.Model.Image;
 import com.example.galleryproject.Model.LocationUtility;
+import com.example.galleryproject.Model.TimeGroupAlgorithm;
 import com.example.galleryproject.Model.UnitImage;
 import com.example.galleryproject.Model.UnitImageGroup;
 import com.example.galleryproject.OnCalendarClickListener;
@@ -82,68 +83,19 @@ public class TimeLineFragment extends Fragment {
 
         filePaths = getListOfFile();
 
+        List<Image> selectedImages = new ArrayList<>();
 
-        List<Image> images = new ArrayList<>();
-        for (String path: filePaths) {
-            images.add(new UnitImage(path));
+//        for (String filePath: filePaths.subList(0, 30)) {
+        for (String filePath: filePaths) {
+            selectedImages.add(new UnitImage(filePath));
+//            Log.e("MainActivity", file.toString() + " UnitImageFile 생성");
         }
 
-        dataset = new ArrayList<>();
-        List<Image> subImages = new ArrayList<>();
-        for (int i = 0; i < 3; i++) {
-            subImages.add(images.get(i));
-            Log.e("FilePaths : ", images.get(i).getFilePath());
-        }
-        dataset.add(new UnitImageGroup(subImages, "랄랄라라랄랄라"));
+        TimeGroupAlgorithm algorithm = new TimeGroupAlgorithm();
+        List<ImageGroup> processedGroups = algorithm.processImages(selectedImages);
 
-        subImages = new ArrayList<>();
-        for (int i = 3; i < 6; i++)
-            subImages.add(images.get(i));
-        dataset.add(new UnitImageGroup(subImages, "룰루랄라"));
-
-        subImages = new ArrayList<>();
-        for (int i = 6; i < 9; i++)
-            subImages.add(images.get(i));
-        dataset.add(new UnitImageGroup(subImages, "중간고사 끝"));
-
-        subImages = new ArrayList<>();
-        for (int i = 31; i < 34; i++)
-            subImages.add(images.get(i));
-        dataset.add(new UnitImageGroup(subImages, "기말고사 시작"));
-
-        subImages = new ArrayList<>();
-        for (int i = 39; i < 42; i++)
-            subImages.add(images.get(i));
-        dataset.add(new UnitImageGroup(subImages, "그전엔 최종데모라니"));
-
-        subImages = new ArrayList<>();
-        for (int i = 43; i < 46; i++)
-            subImages.add(images.get(i));
-        dataset.add(new UnitImageGroup(subImages, "릴리리 맘보"));
-
-        subImages = new ArrayList<>();
-        for (int i = 223; i < 226; i++)
-            subImages.add(images.get(i));
-        dataset.add(new UnitImageGroup(subImages, "쿵따리 샤바라"));
-
-//        subImages = new ArrayList<>();
-//        for (int i = 439; i < 442; i++)
-//            subImages.add(images.get(i));
-//        dataset.add(new UnitImageGroup(subImages, "기억하기 싫은 추억"));
-//
-//        subImages = new ArrayList<>();
-//        for (int i = 500; i < 503; i++)
-//            subImages.add(images.get(i));
-//        dataset.add(new UnitImageGroup(subImages, "생각나던 사진"));
-//
-//        subImages = new ArrayList<>();
-//        for (int i = 503; i < 506; i++)
-//            subImages.add(images.get(i));
-        dataset.add(new UnitImageGroup(subImages, "키야~~~~~"));
-
-        adapter = new TimeLineRecyclerViewAdapter(this.getContext(), dataset);
-        timeLineRecyclerView.addItemDecoration(getSectionCallback(dataset));
-
+        adapter = new TimeLineRecyclerViewAdapter(this.getContext(), processedGroups);
+        timeLineRecyclerView.addItemDecoration(getSectionCallback((ArrayList) processedGroups));
         timeLineRecyclerView.setAdapter(adapter);
 //        TextView textView = root.findViewById(R.id.text_timeline);
 //        timeLineViewModel.getText().observe(this, new Observer<String>() {
