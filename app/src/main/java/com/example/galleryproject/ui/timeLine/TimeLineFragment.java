@@ -16,13 +16,22 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.galleryproject.BottomCalendarLayout;
+import com.example.galleryproject.Model.Image;
+import com.example.galleryproject.Model.LocationUtility;
+import com.example.galleryproject.Model.TimeGroupAlgorithm;
+import com.example.galleryproject.Model.UnitImage;
+import com.example.galleryproject.Model.UnitImageGroup;
 import com.example.galleryproject.OnCalendarClickListener;
 import com.example.galleryproject.OnExpandListener;
 import com.example.galleryproject.R;
 import com.example.galleryproject.TopCalendarLayout;
 
+import com.example.galleryproject.Model.ImageGroup;
+
 import java.io.File;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.List;
 
 import xyz.sangcomz.stickytimelineview.RecyclerSectionItemDecoration;
 import xyz.sangcomz.stickytimelineview.TimeLineRecyclerView;
@@ -37,7 +46,7 @@ public class TimeLineFragment extends Fragment {
     private TopCalendarLayout topCalendar;
     private BottomCalendarLayout bottomCalendar;
 
-    private ArrayList<PhotoGroup> dataset;
+    private ArrayList<ImageGroup> dataset;
     private File file;
     private File[] listFile;
     private ArrayList<String> filePaths;
@@ -73,62 +82,20 @@ public class TimeLineFragment extends Fragment {
         });
 
         filePaths = getListOfFile();
-        dataset = new ArrayList<PhotoGroup>();
-        ArrayList<String> list = new ArrayList<String>();
-        for (int i = 0; i < 3; i++) {
-            list.add(filePaths.get(i));
-            Log.e("FilePaths : ", filePaths.get(i));
+
+        List<Image> selectedImages = new ArrayList<>();
+
+//        for (String filePath: filePaths.subList(0, 30)) {
+        for (String filePath: filePaths) {
+            selectedImages.add(new UnitImage(filePath));
+//            Log.e("MainActivity", file.toString() + " UnitImageFile 생성");
         }
-        dataset.add(new PhotoGroup(list, "랄랄라라랄랄라", getContext()));
 
-        list = new ArrayList<String>();
-        for (int i = 3; i < 6; i++)
-            list.add(filePaths.get(i));
-        dataset.add(new PhotoGroup(list, "룰루랄라", getContext()));
+        TimeGroupAlgorithm algorithm = new TimeGroupAlgorithm();
+        List<ImageGroup> processedGroups = algorithm.processImages(selectedImages);
 
-        list = new ArrayList<String>();
-        for (int i = 6; i < 9; i++)
-            list.add(filePaths.get(i));
-        dataset.add(new PhotoGroup(list, "중간고사 끝", getContext()));
-
-        list = new ArrayList<String>();
-        for (int i = 31; i < 34; i++)
-            list.add(filePaths.get(i));
-        dataset.add(new PhotoGroup(list, "기말고사 시작", getContext()));
-
-        list = new ArrayList<String>();
-        for (int i = 39; i < 42; i++)
-            list.add(filePaths.get(i));
-        dataset.add(new PhotoGroup(list, "그전엔 최종데모라니", getContext()));
-
-        list = new ArrayList<String>();
-        for (int i = 43; i < 46; i++)
-            list.add(filePaths.get(i));
-        dataset.add(new PhotoGroup(list, "릴리리 맘보", getContext()));
-
-        list = new ArrayList<String>();
-        for (int i = 223; i < 226; i++)
-            list.add(filePaths.get(i));
-        dataset.add(new PhotoGroup(list, "쿵따리 샤바라", getContext()));
-
-        list = new ArrayList<String>();
-        for (int i = 439; i < 442; i++)
-            list.add(filePaths.get(i));
-        dataset.add(new PhotoGroup(list, "기억하기 싫은 추억", getContext()));
-
-        list = new ArrayList<String>();
-        for (int i = 500; i < 503; i++)
-            list.add(filePaths.get(i));
-        dataset.add(new PhotoGroup(list, "생각나던 사진", getContext()));
-
-        list = new ArrayList<String>();
-        for (int i = 503; i < 506; i++)
-            list.add(filePaths.get(i));
-        dataset.add(new PhotoGroup(list, "키야~~~~~", getContext()));
-
-        adapter = new TimeLineRecyclerViewAdapter(this.getContext(), dataset);
-        timeLineRecyclerView.addItemDecoration(getSectionCallback(dataset));
-
+        adapter = new TimeLineRecyclerViewAdapter(this.getContext(), processedGroups);
+        timeLineRecyclerView.addItemDecoration(getSectionCallback((ArrayList) processedGroups));
         timeLineRecyclerView.setAdapter(adapter);
 //        TextView textView = root.findViewById(R.id.text_timeline);
 //        timeLineViewModel.getText().observe(this, new Observer<String>() {
@@ -167,14 +134,30 @@ public class TimeLineFragment extends Fragment {
         return list;
     }
 
-    private RecyclerSectionItemDecoration.SectionCallback getSectionCallback(final ArrayList<PhotoGroup> dataset) {
+    private RecyclerSectionItemDecoration.SectionCallback getSectionCallback(final ArrayList<ImageGroup> dataset) {
         return new RecyclerSectionItemDecoration.SectionCallback() {
             @Nullable
             @Override
             public SectionInfo getSectionHeader(int position) {
-                PhotoGroup photoGroup = dataset.get(position);
+                ImageGroup imageGroup = dataset.get(position);
                 Drawable dot = getContext().getResources().getDrawable(R.drawable.dot);
-                return new SectionInfo(photoGroup.getDate(), photoGroup.getLocation(), dot);
+
+                String locationMessage = null;
+                if (imageGroup.getImages().size() > 0) {
+                    Image image = getImageHavingLocation(imageGroup.getImages());
+
+                    if (image == null) {
+                        locationMessage = "위치정보 없음";
+                    } else {
+                        locationMessage = LocationUtility.getLocation(
+                            getContext(), image.getLatitude(), image.getLongitude());
+                    }
+                }
+
+                return new SectionInfo(
+                        imageGroup.getDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                        locationMessage,
+                        dot);
             }
 
             @Override
@@ -182,6 +165,20 @@ public class TimeLineFragment extends Fragment {
                 return !dataset.get(position).getDate()
                         .equals(dataset.get(position - 1).getDate());
             }
+
+            private Image getImageHavingLocation(List<Image> images) {
+                if (images.size() > 0) {
+                    for (Image image: images) {
+                        if (image.getLatitude() != 0.0 &&
+                            image.getLongitude() != 0.0) {
+                            return image;
+                        }
+                    }
+                }
+
+                return null;
+            }
+
         };
     }
 }

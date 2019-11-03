@@ -8,7 +8,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,10 +16,10 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.example.galleryproject.ui.all.AllRecyclerViewDecoration;
-import com.example.galleryproject.ui.timeLine.PhotoGroup;
+import com.example.galleryproject.Model.ImageGroup;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.List;
 
 public class PhotoGroupActivity extends AppCompatActivity {
     private TextView photoGroup_Memo;
@@ -36,22 +35,22 @@ public class PhotoGroupActivity extends AppCompatActivity {
         actionBar.hide();
 
         Bundle bundle = getIntent().getExtras();
-        PhotoGroup photoGroup = bundle.getParcelable("PhotoGroup");
+        ImageGroup imageGroup = bundle.getParcelable("ImageGroup");
 
         photoGroup_Memo = findViewById(R.id.photoGroup_Memo);
-        photoGroup_Memo.setText(photoGroup.getMemo());
+        photoGroup_Memo.setText(imageGroup.getMemo());
 
         photoGroup_RecyclerView = findViewById(R.id.photoGroup_RecyclerView);
         photoGroup_RecyclerView.setLayoutManager(new GridLayoutManager(getApplicationContext(), 2));
-        adapter = new Adapter(photoGroup.getFilePaths());
+        adapter = new Adapter(imageGroup.getFilePaths());
         photoGroup_RecyclerView.setAdapter(adapter);
         photoGroup_RecyclerView.addItemDecoration(new AllRecyclerViewDecoration(10));
     }
 
     class Adapter extends RecyclerView.Adapter<Adapter.ViewHolder>{
-        private ArrayList<String> filePaths;
+        private List<String> filePaths;
 
-        public Adapter(ArrayList<String> filePaths){
+        public Adapter(List<String> filePaths){
             this.filePaths = filePaths;
 //            for(String filepath : filePaths)
 //                Log.e("Adapter : ", filepath);
