@@ -1,10 +1,12 @@
 package com.example.galleryproject.Model;
 
+import android.graphics.Bitmap;
 import android.os.Parcel;
 import android.util.Log;
 import androidx.exifinterface.media.ExifInterface;
 
 import com.example.galleryproject.Model.Image;
+import com.example.galleryproject.Model.imagehash.AverageHash;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,9 +27,12 @@ public class UnitImage extends Image {
 //
 //    private double latitude;
 //    private double longitude;
+    private String imageHash;
 
     public UnitImage(String path) {
+
         super(path);
+        this.imageHash = buildHash();
     }
 
     public UnitImage(Parcel in) {
@@ -41,9 +46,25 @@ public class UnitImage extends Image {
 
         double lat = in.readDouble();
         double lng = in.readDouble();
-
         this.setLatitude(lat);
         this.setLongitude(lng);
+
+        String hash = in.readString();
+        this.imageHash = hash;
+    }
+
+
+
+    public String getImageHash() {
+        return this.imageHash;
+    }
+
+    private String buildHash() {
+        Bitmap resizedBmp = AverageHash.resizeTo8x8(getFile());
+        Bitmap grayscaleBmp = AverageHash.toGreyscale(resizedBmp);
+        String hashF = AverageHash.buildHash(grayscaleBmp);
+
+        return hashF;
     }
 
     /**
@@ -60,6 +81,7 @@ public class UnitImage extends Image {
         parcel.writeSerializable(getCreationTime());
         parcel.writeDouble(getLatitude());
         parcel.writeDouble(getLongitude());
+        parcel.writeString(getImageHash());
     }
 
     public static final Creator<UnitImage> CREATOR = new Creator<UnitImage>() {

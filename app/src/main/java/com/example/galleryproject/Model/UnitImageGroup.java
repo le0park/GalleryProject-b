@@ -18,9 +18,6 @@ public class UnitImageGroup extends ImageGroup {
         super(images, memo);
     }
 
-    public void addImage(UnitImage image) {
-        images.add(image);
-    }
 
     /**
      * Implements Parcelable

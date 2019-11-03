@@ -23,6 +23,10 @@ public abstract class ImageGroup implements Parcelable {
         this.memo = memo;
     }
 
+    public void addImage(Image image) {
+        images.add(image);
+    }
+
     public List<String> getFilePaths() {
         List<String> paths = new ArrayList<>();
         for (Image image: images) {
