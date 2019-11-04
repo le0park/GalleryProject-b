@@ -27,7 +27,11 @@ public abstract class Image implements Serializable, Parcelable {
     }
 
     public Image(String path) {
-        this.file  = new File(path);
+        this(new File(path));
+    }
+
+    public Image(File file) {
+        this.file = file;
         this.creationTime = extractCreationTime();
         this.latitude = ExifLocationExtractor.getLatitude(this.file);
         this.longitude = ExifLocationExtractor.getLongitude(this.file);
@@ -226,6 +230,5 @@ class ExifLocationExtractor {
         result = new Float(FloatD + (FloatM / 60) + (FloatS / 3600));
 
         return result;
-
     }
 }
