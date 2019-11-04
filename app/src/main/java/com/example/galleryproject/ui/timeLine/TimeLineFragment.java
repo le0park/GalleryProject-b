@@ -24,18 +24,19 @@ import com.example.galleryproject.Model.SimGroupAlgorithm;
 import com.example.galleryproject.Model.TimeGroupAlgorithm;
 import com.example.galleryproject.Model.UnitImage;
 import com.example.galleryproject.Model.UnitImageGroup;
-import com.example.galleryproject.OnCalendarClickListener;
-import com.example.galleryproject.OnExpandListener;
 import com.example.galleryproject.R;
 import com.example.galleryproject.TopCalendarLayout;
 
 import com.example.galleryproject.Model.ImageGroup;
 
 import java.io.File;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import xyz.sangcomz.stickytimelineview.RecyclerSectionItemDecoration;
@@ -57,7 +58,7 @@ public class TimeLineFragment extends Fragment {
     private TopCalendarLayout topCalendar;
     private BottomCalendarLayout bottomCalendar;
 
-    private ArrayList<ImageGroup> dataset = new ArrayList();
+    private List<ImageGroup> dataset;
     private List<File> targetFiles;
     private List<Image> selectedImages;
 
@@ -66,33 +67,44 @@ public class TimeLineFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
 
-        timeLineViewModel =
-                ViewModelProviders.of(this).get(TimeLineViewModel.class);
         View root = inflater.inflate(R.layout.fragment_timeline, container, false);
 
         timeLineRecyclerView = root.findViewById(R.id.timeLineRecyclerView);
         timeLineRecyclerView.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
 
-        topCalendar = (TopCalendarLayout) root.findViewById(R.id.topCalendar);
-        bottomCalendar = (BottomCalendarLayout) root.findViewById(R.id.bottomCalendar);
-        topCalendar.setOnExpandListener(new OnExpandListener() {
-            @Override
-            public void onExpand() {
-                topCalendar.buttonChange();
-                bottomCalendar.setVisibility();
-            }
+
+
+        timeLineViewModel =
+                ViewModelProviders.of(this).get(TimeLineViewModel.class);
+        timeLineViewModel.getImageGroups().observe(this, (list) -> {
+            // Update the cached copy of the words in the adapter.
+            adapter.notifyDataSetChanged();
         });
 
-        bottomCalendar.setOnCalendarClickListener(new OnCalendarClickListener() {
-            @Override
-            public void OnCalendarClick(String year, String month) {
-                Toast.makeText(getContext(), "Click : " + year + "년 " + month + "월", Toast.LENGTH_LONG).show();
-                topCalendar.buttonChange();
-                bottomCalendar.setVisibility();
-                topCalendar.setYearTextView(year);
-                topCalendar.setMonthTextView(month);
-            }
+        dataset = timeLineViewModel.getImageGroups().getValue();
+        adapter = new TimeLineRecyclerViewAdapter(this.getContext(), dataset);
+
+        timeLineRecyclerView.addItemDecoration(getSectionCallback((ArrayList) dataset));
+        timeLineRecyclerView.setAdapter(adapter);
+
+
+
+        topCalendar = root.findViewById(R.id.topCalendar);
+        bottomCalendar = root.findViewById(R.id.bottomCalendar);
+        topCalendar.setOnExpandListener(() -> {
+            topCalendar.buttonChange();
+            bottomCalendar.setVisibility();
         });
+
+        bottomCalendar.setOnCalendarClickListener((year, month) -> {
+            Toast.makeText(getContext(), "Click : " + year + "년 " + month + "월", Toast.LENGTH_LONG).show();
+            topCalendar.buttonChange();
+            bottomCalendar.setVisibility();
+            topCalendar.setYearTextView(year);
+            topCalendar.setMonthTextView(month);
+        });
+
+
 
         targetFiles = getListOfFile();
         selectedImages = new ArrayList<>();
@@ -103,13 +115,17 @@ public class TimeLineFragment extends Fragment {
 //            Log.e("MainActivity", file.toString() + " UnitImageFile 생성");
         }
 
-        // 시간 순으로 정렬
+        // 시간 오름차순으로 정렬
         selectedImages.sort((i1, i2) -> {
             LocalDateTime d1 = i1.getCreationTime();
             LocalDateTime d2 = i2.getCreationTime();
 
             return d1.compareTo(d2);
         });
+
+        for (Image image: selectedImages) {
+            Log.e("IMAGES_TIME", image.getCreationTime().toString());
+        }
 
         restImageCount = selectedImages.size();
 
@@ -122,20 +138,6 @@ public class TimeLineFragment extends Fragment {
 
         new ImageGroupAsyncTask(() -> {})
                 .execute(targetImages.toArray(new Image[targetImages.size()]));
-
-
-
-        adapter = new TimeLineRecyclerViewAdapter(this.getContext(), dataset);
-
-        timeLineRecyclerView.addItemDecoration(getSectionCallback((ArrayList) dataset));
-        timeLineRecyclerView.setAdapter(adapter);
-//        TextView textView = root.findViewById(R.id.text_timeline);
-//        timeLineViewModel.getText().observe(this, new Observer<String>() {
-//            @Override
-//            public void onChanged(@Nullable String s) {
-//                textView.setText(s);
-//            }
-//        });
 
         return root;
     }
@@ -197,8 +199,10 @@ public class TimeLineFragment extends Fragment {
 
             @Override
             public boolean isSection(int position) {
-                return !dataset.get(position).getDate()
-                        .equals(dataset.get(position - 1).getDate());
+                LocalDate dt1 = dataset.get(position).getDate().toLocalDate();
+                LocalDate dt2 = dataset.get(position - 1).getDate().toLocalDate();
+
+                return !dt1.equals(dt2);
             }
 
             private Image getImageHavingLocation(List<Image> images) {
@@ -213,7 +217,6 @@ public class TimeLineFragment extends Fragment {
 
                 return null;
             }
-
         };
     }
 
@@ -223,9 +226,9 @@ public class TimeLineFragment extends Fragment {
         @Override
         public List<ImageGroup> doInBackground(Image... images) {
             List<Image> inputImages = Arrays.asList(images);
+
             SimGroupAlgorithm algorithm = new SimGroupAlgorithm();
             List<ImageGroup> processedGroups = algorithm.processImages(inputImages);
-
             return processedGroups;
         }
 
@@ -243,8 +246,7 @@ public class TimeLineFragment extends Fragment {
             ImageGroup result = new UnitImageGroup(resultImages);
 
             // TODO: 후 처리
-            dataset.add(result);
-            adapter.notifyDataSetChanged();
+            timeLineViewModel.insert(result);
         }
     }
 

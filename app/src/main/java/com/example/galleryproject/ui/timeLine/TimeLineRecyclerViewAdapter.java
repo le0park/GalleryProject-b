@@ -21,7 +21,6 @@ import com.example.galleryproject.Model.ImageGroup;
 import com.example.galleryproject.PhotoGroupActivity;
 import com.example.galleryproject.R;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import xyz.sangcomz.stickytimelineview.TimeLineRecyclerView;
@@ -35,35 +34,12 @@ public class TimeLineRecyclerViewAdapter extends TimeLineRecyclerView.Adapter<Ti
         this.imageGroups = imageGroups;
     }
 
-    public class TimeLineRecyclerViewHolder extends RecyclerView.ViewHolder {
-        public TextView timeLineMemo;
-        protected RecyclerView timeLine_Image_RecyclerView;
-
-        public TimeLineRecyclerViewHolder(View itemView) {
-            super(itemView);
-            timeLineMemo = (TextView) itemView.findViewById(R.id.timeLineMemo);
-            timeLine_Image_RecyclerView = (RecyclerView) itemView.findViewById(R.id.timeLine_Image_RecyclerView);
-            itemView.setOnClickListener((View view) -> {
-                int position = getAdapterPosition();
-
-                if(position != RecyclerView.NO_POSITION){
-                    ImageGroup imageGroup = imageGroups.get(position);
-
-                    Intent intent = new Intent(context, PhotoGroupActivity.class);
-                    intent.putExtra("ImageGroup", imageGroup);
-                    context.startActivity(intent);
-                }
-            });
-        }
-    }
-
     @NonNull
     @Override
     public TimeLineRecyclerViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         Context context = parent.getContext();
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View v = inflater.inflate(R.layout.timeline_item, parent, false);
-
         TimeLineRecyclerViewHolder vh = new TimeLineRecyclerViewHolder(v);
         return vh;
     }
@@ -73,16 +49,11 @@ public class TimeLineRecyclerViewAdapter extends TimeLineRecyclerView.Adapter<Ti
         List<String> paths = imageGroups.get(position).getFilePaths();
 
         TimeLineHorizontalAdapter adapter = new TimeLineHorizontalAdapter(context, paths);
-        holder.timeLine_Image_RecyclerView.setHasFixedSize(true);
-        holder.timeLine_Image_RecyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false));
-        holder.timeLine_Image_RecyclerView.setAdapter(adapter);
+        holder.imageRecyclerView.setHasFixedSize(true);
+        holder.imageRecyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false));
+        holder.imageRecyclerView.setAdapter(adapter);
 
-        //TODO decorator 없애야함 margin이나 padding으로 대체할 것
-        TimeLineHorizontalDecorator decorator = new TimeLineHorizontalDecorator(10);
-        holder.timeLine_Image_RecyclerView.addItemDecoration(decorator);
-
-//        holder.timeLineMemo.setText(photoGroups.get(position).getMemo());
-        setReadMore(holder.timeLineMemo, imageGroups.get(position).getMemo(), 2);
+        setReadMore(holder.memoView, imageGroups.get(position).getMemo(), 2);
     }
 
     @Override
@@ -161,5 +132,32 @@ public class TimeLineRecyclerViewAdapter extends TimeLineRecyclerView.Adapter<Ti
                 view.setMovementMethod(LinkMovementMethod.getInstance());
             }
         });
+    }
+
+
+
+    public class TimeLineRecyclerViewHolder extends RecyclerView.ViewHolder {
+        public TextView memoView;
+        protected RecyclerView imageRecyclerView;
+
+        public TimeLineRecyclerViewHolder(View itemView) {
+
+            super(itemView);
+            memoView = itemView.findViewById(R.id.timeLineMemo);
+            imageRecyclerView = itemView.findViewById(R.id.timeLine_Image_RecyclerView);
+
+
+            itemView.setOnClickListener((View view) -> {
+
+                int position = getAdapterPosition();
+                if(position != RecyclerView.NO_POSITION){
+                    ImageGroup imageGroup = imageGroups.get(position);
+
+                    Intent intent = new Intent(context, PhotoGroupActivity.class);
+                    intent.putExtra("ImageGroup", imageGroup);
+                    context.startActivity(intent);
+                }
+            });
+        }
     }
 }
