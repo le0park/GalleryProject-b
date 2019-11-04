@@ -1,6 +1,7 @@
 package com.example.galleryproject.ui.timeLine;
 
 import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
@@ -16,19 +17,39 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.galleryproject.BottomCalendarLayout;
-import com.example.galleryproject.OnCalendarClickListener;
-import com.example.galleryproject.OnExpandListener;
+import com.example.galleryproject.Database.AppDatabase;
+import com.example.galleryproject.Model.Image;
+import com.example.galleryproject.Model.LocationUtility;
+import com.example.galleryproject.Model.SimGroupAlgorithm;
+import com.example.galleryproject.Model.TimeGroupAlgorithm;
+import com.example.galleryproject.Model.UnitImage;
+import com.example.galleryproject.Model.UnitImageGroup;
 import com.example.galleryproject.R;
 import com.example.galleryproject.TopCalendarLayout;
 
+import com.example.galleryproject.Model.ImageGroup;
+
 import java.io.File;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 
 import xyz.sangcomz.stickytimelineview.RecyclerSectionItemDecoration;
 import xyz.sangcomz.stickytimelineview.TimeLineRecyclerView;
 import xyz.sangcomz.stickytimelineview.model.SectionInfo;
 
 public class TimeLineFragment extends Fragment {
+    public static final String BASE_DIRECTORY_PATH = "DCIM/Camera";
+    public static final String EXTENSION_TYPE = ".jpg";
+
+    private LocalDateTime finish = LocalDateTime.now();
+    private LocalDateTime start = finish.minusDays(7);
+    private int restImageCount = 0;
 
     private TimeLineViewModel timeLineViewModel;
     private TimeLineRecyclerView timeLineRecyclerView;
@@ -37,151 +58,255 @@ public class TimeLineFragment extends Fragment {
     private TopCalendarLayout topCalendar;
     private BottomCalendarLayout bottomCalendar;
 
-    private ArrayList<PhotoGroup> dataset;
-    private File file;
-    private File[] listFile;
-    private ArrayList<String> filePaths;
+    private List<ImageGroup> dataset;
+    private List<File> targetFiles;
+    private List<Image> selectedImages;
+
+    private AppDatabase mDb;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        timeLineViewModel =
-                ViewModelProviders.of(this).get(TimeLineViewModel.class);
+
         View root = inflater.inflate(R.layout.fragment_timeline, container, false);
 
         timeLineRecyclerView = root.findViewById(R.id.timeLineRecyclerView);
         timeLineRecyclerView.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
 
-        topCalendar = (TopCalendarLayout) root.findViewById(R.id.topCalendar);
-        bottomCalendar = (BottomCalendarLayout) root.findViewById(R.id.bottomCalendar);
-        topCalendar.setOnExpandListener(new OnExpandListener() {
-            @Override
-            public void onExpand() {
-                topCalendar.buttonChange();
-                bottomCalendar.setVisibility();
-            }
+
+
+        timeLineViewModel =
+                ViewModelProviders.of(this).get(TimeLineViewModel.class);
+        timeLineViewModel.getImageGroups().observe(this, (list) -> {
+            // Update the cached copy of the words in the adapter.
+            adapter.notifyDataSetChanged();
         });
 
-        bottomCalendar.setOnCalendarClickListener(new OnCalendarClickListener() {
-            @Override
-            public void OnCalendarClick(String year, String month) {
-                Toast.makeText(getContext(), "Click : " + year + "년 " + month + "월", Toast.LENGTH_LONG).show();
-                topCalendar.buttonChange();
-                bottomCalendar.setVisibility();
-                topCalendar.setYearTextView(year);
-                topCalendar.setMonthTextView(month);
-            }
-        });
-
-        filePaths = getListOfFile();
-        dataset = new ArrayList<PhotoGroup>();
-        ArrayList<String> list = new ArrayList<String>();
-        for (int i = 0; i < 3; i++) {
-            list.add(filePaths.get(i));
-            Log.e("FilePaths : ", filePaths.get(i));
-        }
-        dataset.add(new PhotoGroup(list, "랄랄라라랄랄라", getContext()));
-
-        list = new ArrayList<String>();
-        for (int i = 3; i < 6; i++)
-            list.add(filePaths.get(i));
-        dataset.add(new PhotoGroup(list, "룰루랄라", getContext()));
-
-        list = new ArrayList<String>();
-        for (int i = 6; i < 9; i++)
-            list.add(filePaths.get(i));
-        dataset.add(new PhotoGroup(list, "중간고사 끝", getContext()));
-
-        list = new ArrayList<String>();
-        for (int i = 31; i < 34; i++)
-            list.add(filePaths.get(i));
-        dataset.add(new PhotoGroup(list, "기말고사 시작", getContext()));
-
-        list = new ArrayList<String>();
-        for (int i = 39; i < 42; i++)
-            list.add(filePaths.get(i));
-        dataset.add(new PhotoGroup(list, "그전엔 최종데모라니", getContext()));
-
-        list = new ArrayList<String>();
-        for (int i = 43; i < 46; i++)
-            list.add(filePaths.get(i));
-        dataset.add(new PhotoGroup(list, "릴리리 맘보", getContext()));
-
-        list = new ArrayList<String>();
-        for (int i = 223; i < 226; i++)
-            list.add(filePaths.get(i));
-        dataset.add(new PhotoGroup(list, "쿵따리 샤바라", getContext()));
-
-        list = new ArrayList<String>();
-        for (int i = 439; i < 442; i++)
-            list.add(filePaths.get(i));
-        dataset.add(new PhotoGroup(list, "기억하기 싫은 추억", getContext()));
-
-        list = new ArrayList<String>();
-        for (int i = 500; i < 503; i++)
-            list.add(filePaths.get(i));
-        dataset.add(new PhotoGroup(list, "생각나던 사진", getContext()));
-
-        list = new ArrayList<String>();
-        for (int i = 503; i < 506; i++)
-            list.add(filePaths.get(i));
-        dataset.add(new PhotoGroup(list, "키야~~~~~", getContext()));
-
+        dataset = timeLineViewModel.getImageGroups().getValue();
         adapter = new TimeLineRecyclerViewAdapter(this.getContext(), dataset);
-        timeLineRecyclerView.addItemDecoration(getSectionCallback(dataset));
 
+        timeLineRecyclerView.addItemDecoration(getSectionCallback((ArrayList) dataset));
         timeLineRecyclerView.setAdapter(adapter);
-//        TextView textView = root.findViewById(R.id.text_timeline);
-//        timeLineViewModel.getText().observe(this, new Observer<String>() {
-//            @Override
-//            public void onChanged(@Nullable String s) {
-//                textView.setText(s);
-//            }
-//        });
+
+
+
+        topCalendar = root.findViewById(R.id.topCalendar);
+        bottomCalendar = root.findViewById(R.id.bottomCalendar);
+        topCalendar.setOnExpandListener(() -> {
+            topCalendar.buttonChange();
+            bottomCalendar.setVisibility();
+        });
+
+        bottomCalendar.setOnCalendarClickListener((year, month) -> {
+            Toast.makeText(getContext(), "Click : " + year + "년 " + month + "월", Toast.LENGTH_LONG).show();
+            topCalendar.buttonChange();
+            bottomCalendar.setVisibility();
+            topCalendar.setYearTextView(year);
+            topCalendar.setMonthTextView(month);
+        });
+
+
+
+        targetFiles = getListOfFile();
+        selectedImages = new ArrayList<>();
+
+        for (File file: targetFiles) {
+            Log.e("ACTIVITY", file.toPath().toString());
+            selectedImages.add(new UnitImage(file));
+//            Log.e("MainActivity", file.toString() + " UnitImageFile 생성");
+        }
+
+        // 시간 오름차순으로 정렬
+        selectedImages.sort((i1, i2) -> {
+            LocalDateTime d1 = i1.getCreationTime();
+            LocalDateTime d2 = i2.getCreationTime();
+
+            return d1.compareTo(d2);
+        });
+
+        for (Image image: selectedImages) {
+            Log.e("IMAGES_TIME", image.getCreationTime().toString());
+        }
+
+        restImageCount = selectedImages.size();
+
+        // 타겟 이미지 리스트 할당
+        List<Image> targetImages = new ArrayList<>(selectedImages);
+        targetImages.removeIf((image) -> {
+            LocalDateTime t = image.getCreationTime();
+            return t.compareTo(start) >= 0 && t.compareTo(finish) < 0;
+        });
+
+        new ImageGroupAsyncTask(() -> {})
+                .execute(targetImages.toArray(new Image[targetImages.size()]));
 
         return root;
     }
 
-    private ArrayList<String> getListOfFile() {
-        ArrayList<String> list = new ArrayList<String>();
-
+    private List<File> getListOfFile() {
+        File baseDirectory = null;
         if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+
             Toast.makeText(getContext(), "Error! No SDCARD Found!", Toast.LENGTH_LONG).show();
         } else {
+
             // Locate the image folder in your SD Card
-            file = new File(Environment.getExternalStorageDirectory()
-                    + File.separator + "DCIM/Camera");
+            baseDirectory = new File(Environment.getExternalStorageDirectory()
+                    + File.separator + BASE_DIRECTORY_PATH);
+
             // Create a new folder if no folder named SDImageTutorial exist
-            file.mkdirs();
+            baseDirectory.mkdirs();
         }
 
-        if (file.isDirectory()) {
-            listFile = file.listFiles();
-            Log.e("FILE_LIST_LENGTH", String.valueOf(listFile.length));
-            for (int i = 0; i < listFile.length; i++) {
-                if (listFile[i].getAbsolutePath().toLowerCase().endsWith(".jpg"))
-                    list.add(0, listFile[i].getAbsolutePath());
-//                else
-//                    Log.e("예외파일", listFile[i].getAbsolutePath());
+        if (baseDirectory != null && baseDirectory.isDirectory()) {
+            File[] files = baseDirectory.listFiles(
+                    (File dir, String name) -> name.toLowerCase().endsWith(EXTENSION_TYPE));
+
+            if (files != null) {
+                Log.e("LENGTH", String.valueOf(files.length));
             }
+
+            return Arrays.asList(files);
         }
-        return list;
+
+        return Arrays.asList();
     }
 
-    private RecyclerSectionItemDecoration.SectionCallback getSectionCallback(final ArrayList<PhotoGroup> dataset) {
+    private RecyclerSectionItemDecoration.SectionCallback getSectionCallback(final ArrayList<ImageGroup> dataset) {
         return new RecyclerSectionItemDecoration.SectionCallback() {
             @Nullable
             @Override
             public SectionInfo getSectionHeader(int position) {
-                PhotoGroup photoGroup = dataset.get(position);
+                ImageGroup imageGroup = dataset.get(position);
                 Drawable dot = getContext().getResources().getDrawable(R.drawable.dot);
-                return new SectionInfo(photoGroup.getDate(), photoGroup.getLocation(), dot);
+
+                String locationMessage = null;
+                if (imageGroup.getImages().size() > 0) {
+                    Image image = getImageHavingLocation(imageGroup.getImages());
+
+                    if (image == null) {
+                        locationMessage = "위치정보 없음";
+                    } else {
+                        locationMessage = LocationUtility.getLocation(
+                            getContext(), image.getLatitude(), image.getLongitude());
+                    }
+                }
+
+                return new SectionInfo(
+                        imageGroup.getDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                        locationMessage,
+                        dot);
             }
 
             @Override
             public boolean isSection(int position) {
-                return !dataset.get(position).getDate()
-                        .equals(dataset.get(position - 1).getDate());
+                LocalDate dt1 = dataset.get(position).getDate().toLocalDate();
+                LocalDate dt2 = dataset.get(position - 1).getDate().toLocalDate();
+
+                return !dt1.equals(dt2);
+            }
+
+            private Image getImageHavingLocation(List<Image> images) {
+                if (images.size() > 0) {
+                    for (Image image: images) {
+                        if (image.getLatitude() != 0.0 &&
+                            image.getLongitude() != 0.0) {
+                            return image;
+                        }
+                    }
+                }
+
+                return null;
             }
         };
+    }
+
+
+
+    class SimGroupAsyncTask extends AsyncTask<Image, Integer, List<ImageGroup>> {
+        @Override
+        public List<ImageGroup> doInBackground(Image... images) {
+            List<Image> inputImages = Arrays.asList(images);
+
+            SimGroupAlgorithm algorithm = new SimGroupAlgorithm();
+            List<ImageGroup> processedGroups = algorithm.processImages(inputImages);
+            return processedGroups;
+        }
+
+        @Override
+        public void onPostExecute(List<ImageGroup> groups) {
+            Toast.makeText(getContext(), groups.size() + "개로 유사도 그룹 완료.", Toast.LENGTH_SHORT)
+                    .show();
+
+            List<Image> resultImages = new ArrayList<>();
+            for (ImageGroup group: groups){
+                Log.e("SIMGROUP_THREAD", group.toString() + " | size: " + group.getImages().size());
+                resultImages.addAll(group.getImages());
+            }
+
+            ImageGroup result = new UnitImageGroup(resultImages);
+
+            // TODO: 후 처리
+            timeLineViewModel.insert(result);
+        }
+    }
+
+
+    class ImageGroupAsyncTask extends AsyncTask<Image, Integer, List<ImageGroup>> {
+        public OnTaskFinishedListener listener;
+
+        public ImageGroupAsyncTask(OnTaskFinishedListener listener) {
+            super();
+            this.listener = listener;
+        }
+
+        @Override
+        public List<ImageGroup> doInBackground(Image... images) {
+
+            List<Image> inputImages = Arrays.asList(images);
+
+            TimeGroupAlgorithm algorithm = new TimeGroupAlgorithm();
+            List<ImageGroup> processedGroups = algorithm.processImages(inputImages);
+
+            publishProgress(processedGroups.size());
+
+            restImageCount -= inputImages.size();
+            return processedGroups;
+        }
+
+        @Override
+        public void onPostExecute(List<ImageGroup> groups) {
+
+            // 유사도 클러스터링
+            for (ImageGroup group: groups) {
+
+                // 시간 그룹 내에서 유사도 클러스터링 실행
+                Image[] timeImages = new Image[group.getImages().size()];
+                new SimGroupAsyncTask()
+                        .execute(group.getImages().toArray(timeImages));
+            }
+
+
+            // 남은 사진 시간 클러스터링
+            if (restImageCount > 0) {
+                // 타겟 이미지 리스트 할당
+                finish = start;
+                start = finish.minusDays(7);
+
+                // 이미지 타겟팅
+                List<Image> targetImages = new ArrayList<>(selectedImages);
+                targetImages.removeIf((image) -> {
+                    LocalDateTime t = image.getCreationTime();
+                    return t.compareTo(start) >= 0 && t.compareTo(finish) < 0;
+                });
+
+                // 다음 시간 클러스터링 실행
+                new ImageGroupAsyncTask(() -> {})
+                        .execute(targetImages.toArray(new Image[targetImages.size()]));
+            }
+        }
+    }
+
+    interface OnTaskFinishedListener {
+        void onFinished();
     }
 }

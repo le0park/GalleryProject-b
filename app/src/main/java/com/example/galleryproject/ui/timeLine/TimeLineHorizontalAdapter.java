@@ -14,13 +14,14 @@ import com.example.galleryproject.R;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 public class TimeLineHorizontalAdapter extends RecyclerView.Adapter<TimeLineHorizontalAdapter.TimeLineHorizontalViewHolder> {
 
-    private ArrayList<String> paths;
+    private List<String> paths;
     private Context context;
 
-    public TimeLineHorizontalAdapter(Context context, ArrayList<String> paths){
+    public TimeLineHorizontalAdapter(Context context, List<String> paths){
         this.context = context;
         this.paths = paths;
     }
