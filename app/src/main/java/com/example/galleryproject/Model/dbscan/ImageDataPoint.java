@@ -14,15 +14,14 @@ public class ImageDataPoint implements DataPoint {
      * Image --> UnitImage 라고 가정
      */
     private int clusterId = -1;
-    private Image file;
+    private UnitImage file;
 
     public ImageDataPoint(Image file) {
-
         if (file instanceof UnitImage) {
-            this.file = file;
+            this.file = (UnitImage) file;
+        } else {
+            this.file = null;
         }
-
-        this.file = null;
     }
 
     public double distance(DataPoint datapoint) {
@@ -45,10 +44,8 @@ public class ImageDataPoint implements DataPoint {
     }
 
     private String getHash() {
-
-        if (this.file instanceof UnitImage){
-            UnitImage ui = (UnitImage) this.file;
-            return ui.getImageHash();
+        if (this.file != null){
+            return this.file.getImageHash();
         }
 
         return null;
