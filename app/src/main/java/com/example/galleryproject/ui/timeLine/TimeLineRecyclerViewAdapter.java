@@ -53,6 +53,12 @@ public class TimeLineRecyclerViewAdapter extends TimeLineRecyclerView.Adapter<Ti
         holder.imageRecyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false));
         holder.imageRecyclerView.setAdapter(adapter);
 
+
+        if(holder.imageRecyclerView.getItemDecorationCount() == 0) {
+            TimeLineHorizontalDecorator decorator = new TimeLineHorizontalDecorator(10);
+            holder.imageRecyclerView.addItemDecoration(decorator);
+        }
+
         setReadMore(holder.memoView, imageGroups.get(position).getMemo(), 2);
     }
 

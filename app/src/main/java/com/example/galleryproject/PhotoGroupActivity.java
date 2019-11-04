@@ -11,6 +11,10 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -22,7 +26,14 @@ import java.io.File;
 import java.util.List;
 
 public class PhotoGroupActivity extends AppCompatActivity {
-    private TextView photoGroup_Memo;
+    private TextView photoGroup_date_textView;
+    private TextView photoGroup_Memo_textView;
+    private EditText photoGroup_Memo_editText;
+    private Button saveButton;
+    private ImageButton photoGroup_backButton;
+
+    private InputMethodManager imm;
+
     private Adapter adapter;
     private RecyclerView photoGroup_RecyclerView;
 
@@ -37,8 +48,48 @@ public class PhotoGroupActivity extends AppCompatActivity {
         Bundle bundle = getIntent().getExtras();
         ImageGroup imageGroup = bundle.getParcelable("ImageGroup");
 
-        photoGroup_Memo = findViewById(R.id.photoGroup_Memo);
-        photoGroup_Memo.setText(imageGroup.getMemo());
+        imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+        saveButton = findViewById(R.id.saveButton);
+        photoGroup_backButton = findViewById(R.id.photoGroup_backButton);
+        photoGroup_date_textView = findViewById(R.id.photoGroup_date_textView);
+        photoGroup_Memo_editText = findViewById(R.id.photoGroup_Memo_editText);
+        photoGroup_Memo_textView = findViewById(R.id.photoGroup_Memo_textView);
+
+        photoGroup_date_textView.setText(imageGroup.getDate().toString());
+
+        photoGroup_Memo_textView.setText(imageGroup.getMemo());
+        photoGroup_Memo_textView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                photoGroup_Memo_textView.setVisibility(View.GONE);
+                photoGroup_Memo_editText.setVisibility(View.VISIBLE);
+                photoGroup_Memo_editText.setText(photoGroup_Memo_textView.getText());
+                photoGroup_Memo_editText.setSelection(photoGroup_Memo_textView.getText().length());
+                photoGroup_Memo_editText.requestFocus();
+                imm.showSoftInput(photoGroup_Memo_editText,0);
+                saveButton.setVisibility(View.VISIBLE);
+            }
+        });
+
+        saveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                photoGroup_Memo_editText.setVisibility(View.GONE);
+                photoGroup_Memo_textView.setVisibility(View.VISIBLE);
+                photoGroup_Memo_textView.setText(photoGroup_Memo_editText.getText());
+                photoGroup_Memo_editText.clearFocus();
+                imm.hideSoftInputFromWindow(photoGroup_Memo_editText.getWindowToken(), 0);
+                saveButton.setVisibility(View.GONE);
+                //TODO 수정한 메모 저장
+            }
+        });
+
+        photoGroup_backButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                finish();
+            }
+        });
 
         photoGroup_RecyclerView = findViewById(R.id.photoGroup_RecyclerView);
         photoGroup_RecyclerView.setLayoutManager(new GridLayoutManager(getApplicationContext(), 2));

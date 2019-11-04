@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.galleryproject.BottomCalendarLayout;
 import com.example.galleryproject.Database.AppDatabase;
+import com.example.galleryproject.MainActivity;
 import com.example.galleryproject.Model.Image;
 import com.example.galleryproject.Model.LocationUtility;
 import com.example.galleryproject.Model.SimGroupAlgorithm;
