@@ -27,12 +27,14 @@ public class UnitImage extends Image {
 //
 //    private double latitude;
 //    private double longitude;
-    private String imageHash;
+    private volatile String imageHash;
 
     public UnitImage(String path) {
-
         super(path);
-        this.imageHash = buildHash();
+    }
+
+    public UnitImage(File file) {
+        super(file);
     }
 
     public UnitImage(Parcel in) {
@@ -56,6 +58,13 @@ public class UnitImage extends Image {
 
 
     public String getImageHash() {
+        if (this.imageHash == null) {
+            synchronized (UnitImage.class) {
+                if (this.imageHash == null) {
+                    this.imageHash = buildHash();
+                }
+            }
+        }
         return this.imageHash;
     }
 
