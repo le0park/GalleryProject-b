@@ -1,6 +1,7 @@
 package com.example.galleryproject.ui.all;
 
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -21,6 +22,7 @@ import com.example.galleryproject.BottomCalendarLayout;
 import com.example.galleryproject.MainActivity;
 import com.example.galleryproject.OnCalendarClickListener;
 import com.example.galleryproject.OnExpandListener;
+import com.example.galleryproject.PhotoActivity;
 import com.example.galleryproject.R;
 import com.example.galleryproject.TopCalendarLayout;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -89,7 +91,11 @@ public class AllFragment extends Fragment {
         adapter.setPhotoClickListener(new PhotoClickListener() {
             @Override
             public void onItemClick(int position) {
-                showObjects(position);
+//                showObjects(position);
+                Intent intent = new Intent(getActivity().getApplicationContext(), PhotoActivity.class);
+//                Log.e("FILEPATH", filePaths.get(position));
+                intent.putExtra("filePath", filePaths.get(position));
+                startActivity(intent);
             }
         });
 

@@ -13,6 +13,7 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
@@ -73,14 +74,13 @@ public class TimeLineFragment extends Fragment {
         timeLineRecyclerView = root.findViewById(R.id.timeLineRecyclerView);
         timeLineRecyclerView.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
 
-
-
         timeLineViewModel =
                 ViewModelProviders.of(this).get(TimeLineViewModel.class);
         timeLineViewModel.getImageGroups().observe(this, (list) -> {
             // Update the cached copy of the words in the adapter.
             adapter.notifyDataSetChanged();
         });
+
 
         dataset = timeLineViewModel.getImageGroups().getValue();
         adapter = new TimeLineRecyclerViewAdapter(this.getContext(), dataset);
@@ -104,8 +104,6 @@ public class TimeLineFragment extends Fragment {
             topCalendar.setYearTextView(year);
             topCalendar.setMonthTextView(month);
         });
-
-
 
         targetFiles = getListOfFile();
         selectedImages = new ArrayList<>();
@@ -235,8 +233,7 @@ public class TimeLineFragment extends Fragment {
 
         @Override
         public void onPostExecute(List<ImageGroup> groups) {
-            Toast.makeText(getContext(), groups.size() + "개로 유사도 그룹 완료.", Toast.LENGTH_SHORT)
-                    .show();
+            Toast.makeText(getContext(), groups.size() + "개로 유사도 그룹 완료.", Toast.LENGTH_SHORT).show();
 
             List<Image> resultImages = new ArrayList<>();
             for (ImageGroup group: groups){
