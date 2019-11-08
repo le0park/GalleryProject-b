@@ -55,26 +55,21 @@ public class UriLabeler {
         }
 
         labels.clear();
-        labeler.processImage(firebaseImage)
-            .addOnSuccessListener(new OnSuccessListener<List<FirebaseVisionImageLabel>>() {
-                @Override
-                public void onSuccess(List<FirebaseVisionImageLabel> imagelabels) {
-                    for (FirebaseVisionImageLabel label : imagelabels) {
-                        String text = label.getText();
-                        String entityId = label.getEntityId();
-                        Float confidence = label.getConfidence();
-                        labels.add(new Label(text, entityId, confidence));
-                    }
 
-                    listener.onSuccess(uri, labels);
+        labeler.processImage(firebaseImage)
+            .addOnSuccessListener((List<FirebaseVisionImageLabel> imagelabels) -> {
+                for (FirebaseVisionImageLabel label : imagelabels) {
+                    String text = label.getText();
+                    String entityId = label.getEntityId();
+                    Float confidence = label.getConfidence();
+                    labels.add(new Label(text, entityId, confidence));
                 }
+
+                listener.onSuccess(uri, labels);
             })
-            .addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    Log.e("FIREBASE_IMAGE_LABEL", e.getMessage());
-                    listener.onFailure(uri);
-                }
+            .addOnFailureListener((@NonNull Exception e) -> {
+                Log.e("FIREBASE_IMAGE_LABEL", e.getMessage());
+                listener.onFailure(uri);
             });
     }
 }
