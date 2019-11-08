@@ -81,14 +81,11 @@ public class TimeLineFragment extends Fragment {
             adapter.notifyDataSetChanged();
         });
 
-
         dataset = timeLineViewModel.getImageGroups().getValue();
         adapter = new TimeLineRecyclerViewAdapter(this.getContext(), dataset);
 
         timeLineRecyclerView.addItemDecoration(getSectionCallback((ArrayList) dataset));
         timeLineRecyclerView.setAdapter(adapter);
-
-
 
         topCalendar = root.findViewById(R.id.topCalendar);
         bottomCalendar = root.findViewById(R.id.bottomCalendar);
@@ -109,7 +106,7 @@ public class TimeLineFragment extends Fragment {
         selectedImages = new ArrayList<>();
 
         for (File file: targetFiles) {
-            Log.e("ACTIVITY", file.toPath().toString());
+//            Log.e("ACTIVITY", file.toPath().toString());
             selectedImages.add(new UnitImage(file));
 //            Log.e("MainActivity", file.toString() + " UnitImageFile 생성");
         }
@@ -123,7 +120,7 @@ public class TimeLineFragment extends Fragment {
         });
 
         for (Image image: selectedImages) {
-            Log.e("IMAGES_TIME", image.getCreationTime().toString());
+//            Log.e("IMAGES_TIME", image.getCreationTime().toString());
         }
 
         restImageCount = selectedImages.size();
@@ -161,7 +158,7 @@ public class TimeLineFragment extends Fragment {
                     (File dir, String name) -> name.toLowerCase().endsWith(EXTENSION_TYPE));
 
             if (files != null) {
-                Log.e("LENGTH", String.valueOf(files.length));
+//                Log.e("LENGTH", String.valueOf(files.length));
             }
 
             return Arrays.asList(files);
@@ -237,7 +234,7 @@ public class TimeLineFragment extends Fragment {
 
             List<Image> resultImages = new ArrayList<>();
             for (ImageGroup group: groups){
-                Log.e("SIMGROUP_THREAD", group.toString() + " | size: " + group.getImages().size());
+//                Log.e("SIMGROUP_THREAD", group.toString() + " | size: " + group.getImages().size());
                 resultImages.addAll(group.getImages());
             }
 
