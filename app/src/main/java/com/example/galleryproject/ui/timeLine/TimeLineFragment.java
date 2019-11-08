@@ -19,6 +19,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.example.galleryproject.BottomCalendarLayout;
 import com.example.galleryproject.Database.AppDatabase;
 import com.example.galleryproject.Model.Image;
+import com.example.galleryproject.Model.ImageGroupLabelAnalyzer;
+import com.example.galleryproject.Model.Label;
+import com.example.galleryproject.Model.LabelGroup;
 import com.example.galleryproject.Model.LocationUtility;
 import com.example.galleryproject.Model.SimGroupAlgorithm;
 import com.example.galleryproject.Model.TimeGroupAlgorithm;
@@ -28,6 +31,7 @@ import com.example.galleryproject.R;
 import com.example.galleryproject.TopCalendarLayout;
 
 import com.example.galleryproject.Model.ImageGroup;
+import com.example.galleryproject.Util.ImageFileLabeler;
 
 import java.io.File;
 import java.time.LocalDate;
@@ -38,6 +42,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import xyz.sangcomz.stickytimelineview.RecyclerSectionItemDecoration;
 import xyz.sangcomz.stickytimelineview.TimeLineRecyclerView;
@@ -48,7 +54,7 @@ public class TimeLineFragment extends Fragment {
     public static final String EXTENSION_TYPE = ".jpg";
 
     private LocalDateTime finish = LocalDateTime.now();
-    private LocalDateTime start = finish.minusDays(7);
+    private LocalDateTime start = finish.minusDays(30);
     private int restImageCount = 0;
 
     private TimeLineViewModel timeLineViewModel;
@@ -63,6 +69,7 @@ public class TimeLineFragment extends Fragment {
     private List<Image> selectedImages;
 
     private AppDatabase mDb;
+    private ImageGroupLabelAnalyzer analyzer = new ImageGroupLabelAnalyzer();
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -71,8 +78,6 @@ public class TimeLineFragment extends Fragment {
 
         timeLineRecyclerView = root.findViewById(R.id.timeLineRecyclerView);
         timeLineRecyclerView.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
-
-
 
         timeLineViewModel =
                 ViewModelProviders.of(this).get(TimeLineViewModel.class);
@@ -86,7 +91,6 @@ public class TimeLineFragment extends Fragment {
 
         timeLineRecyclerView.addItemDecoration(getSectionCallback((ArrayList) dataset));
         timeLineRecyclerView.setAdapter(adapter);
-
 
 
         topCalendar = root.findViewById(R.id.topCalendar);
@@ -106,14 +110,16 @@ public class TimeLineFragment extends Fragment {
 
 
 
+
+
         targetFiles = getListOfFile();
         selectedImages = new ArrayList<>();
 
         for (File file: targetFiles) {
             Log.e("ACTIVITY", file.toPath().toString());
             selectedImages.add(new UnitImage(file));
-//            Log.e("MainActivity", file.toString() + " UnitImageFile 생성");
         }
+
 
         // 시간 오름차순으로 정렬
         selectedImages.sort((i1, i2) -> {
@@ -123,11 +129,8 @@ public class TimeLineFragment extends Fragment {
             return d1.compareTo(d2);
         });
 
-        for (Image image: selectedImages) {
-            Log.e("IMAGES_TIME", image.getCreationTime().toString());
-        }
-
         restImageCount = selectedImages.size();
+
 
         // 타겟 이미지 리스트 할당
         List<Image> targetImages = new ArrayList<>(selectedImages);
@@ -221,8 +224,14 @@ public class TimeLineFragment extends Fragment {
     }
 
 
-
     class SimGroupAsyncTask extends AsyncTask<Image, Integer, List<ImageGroup>> {
+
+        OnTaskFinishedListener listener;
+
+        public SimGroupAsyncTask(OnTaskFinishedListener listener) {
+            this.listener = listener;
+        }
+
         @Override
         public List<ImageGroup> doInBackground(Image... images) {
             List<Image> inputImages = Arrays.asList(images);
@@ -246,7 +255,37 @@ public class TimeLineFragment extends Fragment {
             ImageGroup result = new UnitImageGroup(resultImages);
 
             // TODO: 후 처리
-            timeLineViewModel.insert(result);
+            new AsyncLabelingTask((labelGroups) -> {
+                analyzer.setGroups(groups);
+                analyzer.setLabelGroups(labelGroups);
+                analyzer.analyze();
+
+//                int size = 0;
+//                for (ImageGroup group: groups) {
+//                    size += group.getImages().size();
+//                }
+                Log.e("LABEL_ANALYZER", "size: " + groups.size());
+
+                List<double[]> x = analyzer.getX();
+                int xCount = x.size();
+                Log.e("LABEL_ANALYZER", "" + xCount);
+
+                for (int xIdx = 0; xIdx < xCount; xIdx++) {
+                    StringBuffer sb = new StringBuffer();
+                    sb.append("xIdx: " + xIdx);
+                    sb.append("{ ");
+                    for (double s: x.get(xIdx)) {
+                        sb.append(s);
+                        sb.append(", ");
+                    }
+                    sb.append("}");
+
+                    Log.e("LABEL_ANALYZER", sb.toString());
+                }
+
+                listener.onFinished();
+                timeLineViewModel.insert(result);
+            }).execute(groups);
         }
     }
 
@@ -281,10 +320,9 @@ public class TimeLineFragment extends Fragment {
 
                 // 시간 그룹 내에서 유사도 클러스터링 실행
                 Image[] timeImages = new Image[group.getImages().size()];
-                new SimGroupAsyncTask()
-                        .execute(group.getImages().toArray(timeImages));
+                new SimGroupAsyncTask(() -> {
+                }).execute(group.getImages().toArray(timeImages));
             }
-
 
             // 남은 사진 시간 클러스터링
             if (restImageCount > 0) {
@@ -308,5 +346,81 @@ public class TimeLineFragment extends Fragment {
 
     interface OnTaskFinishedListener {
         void onFinished();
+    }
+
+
+
+    /**
+     * Thread for Async MLKit DbImage Labeler
+     * labeling 하고자 하는 이미지 -> label list
+     */
+    private class AsyncLabelingTask extends AsyncTask<List<ImageGroup>, Integer, List<List<LabelGroup>>> {
+        List<LabelGroup> result = new ArrayList<>();
+        List<String> filenames = new ArrayList<>();
+
+        private MLkitLabelListener listener;
+
+        AsyncLabelingTask(MLkitLabelListener listener) {
+            this.listener = listener;
+        }
+
+        @Override
+        protected List<List<LabelGroup>> doInBackground(List<ImageGroup>... groups) {
+            List<List<LabelGroup>> allLabelGroups = new ArrayList<>();
+            for (ImageGroup group: groups[0]) {
+                List<Image> images = group.getImages();
+                List<LabelGroup> labelGroups = processImagesWithMlkit(images);
+                allLabelGroups.add(labelGroups);
+            }
+
+            return allLabelGroups;
+        }
+
+        @Override
+        protected void onPostExecute(List<List<LabelGroup>> labels) {
+            super.onPostExecute(labels);
+            Log.e("ImageFileLabeler", "" + labels.size());
+
+            listener.onLabelFinished(labels);
+        }
+
+        private List<LabelGroup> processImagesWithMlkit(List<Image> imageFiles) {
+            final CountDownLatch latch = new CountDownLatch(imageFiles.size());
+            for (Image imageFile: imageFiles) {
+                File file = imageFile.getFile();
+
+                ImageFileLabeler imageFileLabeler = new ImageFileLabeler(file, new ImageFileLabeler.ImageFileLabelerListener() {
+                    @Override
+                    public void onSuccess(File file, List<Label> labels) {
+                        LabelGroup labelGroup = new LabelGroup(labels);
+                        result.add(labelGroup);
+                        filenames.add(file.getName());
+
+                        latch.countDown();
+                    }
+
+                    @Override
+                    public void onFailure(File file) {
+                        Log.e("ImageFileLabeler", file.getName());
+                        latch.countDown();
+                    }
+                });
+
+                imageFileLabeler.process();
+            }
+
+            try {
+                latch.await(5, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Log.e("MLKIT_ASYNC_TASK", e.toString());
+            }
+
+            return result;
+        }
+
+    }
+
+    interface MLkitLabelListener {
+        void onLabelFinished(List<List<LabelGroup>> labelGroups);
     }
 }
