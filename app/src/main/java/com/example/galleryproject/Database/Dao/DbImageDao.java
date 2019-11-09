@@ -1,11 +1,11 @@
-package com.example.galleryproject.Dao;
+package com.example.galleryproject.Database.Dao;
 
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
 
-import com.example.galleryproject.Entity.DbImage;
+import com.example.galleryproject.Database.Entity.DbImage;
 
 import java.util.List;
 
@@ -18,11 +18,11 @@ public interface DbImageDao {
     List<DbImage> loadAllByIds(int[] ids);
 
 
-    @Query("SELECT * FROM image WHERE id = (:id)")
+    @Query("SELECT * FROM image WHERE id = :id")
     List<DbImage> loadAllById(int id);
 
 
-    @Query("SELECT * FROM image WHERE id = (:groupId)")
+    @Query("SELECT * FROM image WHERE id = :groupId")
     List<DbImage> loadAllByGroupId(int groupId);
 
 
