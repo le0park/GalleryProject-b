@@ -1,11 +1,14 @@
-package com.example.galleryproject.Entity;
+package com.example.galleryproject.Database.Entity;
 
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
+import androidx.room.Ignore;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
+
+import com.example.galleryproject.Model.Label;
 
 
 @Entity(tableName = "mlkit_label",
@@ -30,4 +33,21 @@ public class DbLabel {
 
     @ColumnInfo(name = "image_id")
     public Integer imageId;
+
+    public void setImageId(Integer imageId) {
+        this.imageId = imageId;
+    }
+
+    public void setText(String text) {
+        this.text = text;
+    }
+
+    public void setConfidence(double confidence) {
+        this.confidence = confidence;
+    }
+
+    public void setEntityId(String entityId) {
+        this.entityId = entityId;
+    }
+
 }

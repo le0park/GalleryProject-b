@@ -7,16 +7,15 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
-import com.example.galleryproject.Dao.DbImageDao;
-import com.example.galleryproject.Dao.DbMlkitLabelDao;
-import com.example.galleryproject.Entity.DbImage;
-import com.example.galleryproject.Entity.DbImageGroup;
-import com.example.galleryproject.Entity.DbLabel;
-import com.example.galleryproject.Entity.DbPost;
-import com.example.galleryproject.Entity.DbRepImage;
+import com.example.galleryproject.Database.Dao.DbImageDao;
+import com.example.galleryproject.Database.Dao.DbImagesWithImageGroupDao;
+import com.example.galleryproject.Database.Dao.DbMlkitLabelDao;
+import com.example.galleryproject.Database.Entity.DbImage;
+import com.example.galleryproject.Database.Entity.DbImageGroup;
+import com.example.galleryproject.Database.Entity.DbLabel;
+import com.example.galleryproject.Database.Entity.DbPost;
+import com.example.galleryproject.Database.Entity.DbRepImage;
 
-import java.util.ArrayList;
-import java.util.List;
 
 @Database(entities = {
                 DbImage.class,
@@ -29,8 +28,7 @@ import java.util.List;
           exportSchema = false)
 @TypeConverters({Converters.class})
 public abstract class AppDatabase extends RoomDatabase {
-    public abstract DbImageDao imageDao();
-    public abstract DbMlkitLabelDao mlkitLabelDao();
+    public abstract DbImagesWithImageGroupDao imagesWithImageGroupDao();
 
     private static volatile AppDatabase sInstance;
 
@@ -46,42 +44,5 @@ public abstract class AppDatabase extends RoomDatabase {
         }
 
         return sInstance;
-    }
-
-
-    /**
-     * Inserts the dummy data into the database if it is currently empty.
-     */
-    public void populateInitialData() {
-        // UI test를 위해서 dummy data 생성할 수 있게 구현
-        if (imageDao().count() == 0) {
-            runInTransaction(() -> {
-
-                List<DbImage> dbImages = new ArrayList<>();
-                for (int i = 0; i < 10; i++) {
-                    DbImage dbImage = new DbImage();
-                    dbImage.path = "/" + i;
-
-                    dbImages.add(dbImage);
-                }
-                imageDao().insertAll(dbImages.toArray(new DbImage[dbImages.size()]));
-
-
-                List<DbImage> insertedDbImages = imageDao().getAll();
-                List<DbLabel> labels = new ArrayList<>();
-                for (int i = 0; i < 10; i++) {
-                    DbLabel label = new DbLabel();
-
-                    int imageId = insertedDbImages.get(i).id;
-                    label.imageId = imageId;
-                    label.confidence = 0.5;
-                    label.entityId = "/123456";
-                    label.text = "HelloWorld";
-
-                    labels.add(label);
-                }
-                mlkitLabelDao().insertAll(labels.toArray(new DbLabel[labels.size()]));
-            });
-        }
     }
 }
