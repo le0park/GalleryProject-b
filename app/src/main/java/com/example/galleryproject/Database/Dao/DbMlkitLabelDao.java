@@ -1,11 +1,11 @@
-package com.example.galleryproject.Dao;
+package com.example.galleryproject.Database.Dao;
 
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
 
-import com.example.galleryproject.Entity.DbLabel;
+import com.example.galleryproject.Database.Entity.DbLabel;
 
 import java.util.List;
 
