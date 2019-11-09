@@ -14,6 +14,12 @@ import java.nio.file.attribute.FileTime;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
+import javax.annotation.Nullable;
 
 public abstract class Image implements Serializable, Parcelable {
     private File file;
@@ -205,7 +211,7 @@ class ExifLocationExtractor {
     }
 
     public static int getLongitudeE6(File file) {
-        return (int) (getLongitude(file)* 1000000);
+        return (int) (getLongitude(file) * 1000000);
     }
 
     private static double convertToDegree(String stringDMS) {
@@ -231,4 +237,49 @@ class ExifLocationExtractor {
 
         return result;
     }
+
+    /**
+     * @param labels
+     * @return objects to int
+     * 0 : person / 1 : food / 2 : pet(dog or cat) / 3 : scenery
+     * 4 : etc
+     */
+    public int categorizeObject(List<Label> labels) {
+        // Smile, Fun, Eyelash, Bangs, Skin, Selfie, Hair
+        // Food, Cuisine, Vegetable, Meal
+        // Pet, Dog, Cat, Fur
+        // Sky, Building, River, Rock, Lake, Mountain
+
+        // Descending Order
+        Collections.sort(labels, (label1, label2) -> {
+            return label2.getText().compareTo(label1.getText());
+        });
+
+        float minConfidence = (float) 0.3;
+
+        StringBuffer texts = new StringBuffer();
+        for (Label label : labels) {
+            if (label.getConfidence() < minConfidence)
+                continue;
+            texts.append(label.getText());
+        }
+        String text = texts.toString();
+
+        if (text.contains("Smile") || text.contains("Fun") || text.contains("Eyelash")
+                || text.contains("Bangs") || text.contains("Skin") || text.contains("Selfie")) {
+            return 0;
+        } else if (text.contains("Food") || text.contains("Cuisine")
+                || text.contains("Vegetable") || text.contains("Meal")) {
+            return 1;
+        } else if (text.contains("Pet") || text.contains("Dog")
+                || text.contains("Cat") || text.contains("Fur")) {
+            return 2;
+        } else if (text.contains("Sky") || text.contains("Building")
+                || text.contains("River") || text.contains("Mountain")) {
+            return 3;
+        } else {
+            return 4;
+        }
+    }
+
 }

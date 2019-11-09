@@ -13,6 +13,7 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
@@ -25,6 +26,7 @@ import com.example.galleryproject.Database.Entity.DbLabel;
 import com.example.galleryproject.Model.Adapter.ImageAdapter;
 import com.example.galleryproject.Model.Adapter.ImageGroupAdapter;
 import com.example.galleryproject.Model.Adapter.LabelAdapter;
+import com.example.galleryproject.MainActivity;
 import com.example.galleryproject.Model.Image;
 import com.example.galleryproject.Model.ImageGroupLabelAnalyzer;
 import com.example.galleryproject.Model.Label;
@@ -39,6 +41,8 @@ import com.example.galleryproject.TopCalendarLayout;
 
 import com.example.galleryproject.Model.ImageGroup;
 import com.example.galleryproject.Util.ImageFileLabeler;
+import com.example.galleryproject.ui.survey.SurveyClickListener;
+import com.example.galleryproject.ui.survey.SurveyDialogFragment;
 
 import java.io.File;
 import java.time.LocalDate;
@@ -77,6 +81,8 @@ public class TimeLineFragment extends Fragment {
     private List<File> targetFiles;
     private List<Image> selectedImages;
 
+    private List<String> objectPriority = new ArrayList<>();
+
     private AppDatabase mDb;
     private ImageGroupLabelAnalyzer analyzer = new ImageGroupLabelAnalyzer();
     private CountDownLatch latch;
@@ -85,6 +91,19 @@ public class TimeLineFragment extends Fragment {
                              ViewGroup container, Bundle savedInstanceState) {
 
         View root = inflater.inflate(R.layout.fragment_timeline, container, false);
+
+        SurveyDialogFragment survey = SurveyDialogFragment.getInstance();
+        survey.show(getChildFragmentManager(), "Surey Dialog");
+        survey.setSurveyClickListener(new SurveyClickListener() {
+            @Override
+            public void OnSurveyClick(ArrayList<String> list) {
+                objectPriority.addAll(list);
+//                StringBuilder sb = new StringBuilder();
+//                for(String s: objectPriority)
+//                    sb.append(s);
+//                Log.e("TIMELINE : ", sb.toString());
+            }
+        });
 
         timeLineRecyclerView = root.findViewById(R.id.timeLineRecyclerView);
         timeLineRecyclerView.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
@@ -127,6 +146,7 @@ public class TimeLineFragment extends Fragment {
         selectedImages = new ArrayList<>();
 
         for (File file: targetFiles) {
+//            Log.e("ACTIVITY", file.toPath().toString());
             selectedImages.add(new UnitImage(file));
         }
 
@@ -155,7 +175,6 @@ public class TimeLineFragment extends Fragment {
 
         return root;
     }
-
 
 
 
@@ -258,12 +277,11 @@ public class TimeLineFragment extends Fragment {
 
         @Override
         public void onPostExecute(List<ImageGroup> groups) {
-            Toast.makeText(getContext(), groups.size() + "개로 유사도 그룹 완료.", Toast.LENGTH_SHORT)
-                    .show();
+            Toast.makeText(getContext(), groups.size() + "개로 유사도 그룹 완료.", Toast.LENGTH_SHORT).show();
 
             List<Image> resultImages = new ArrayList<>();
             for (ImageGroup group: groups){
-                Log.e("SIMGROUP_THREAD", group.toString() + " | size: " + group.getImages().size());
+//                Log.e("SIMGROUP_THREAD", group.toString() + " | size: " + group.getImages().size());
                 resultImages.addAll(group.getImages());
             }
 

@@ -26,4 +26,12 @@ public class Label {
     public String toString() {
         return "{ \"text\": \"" + text + "\", \"entityID\": \"" + entityId + "\", \"confidence\": " + confidence + " }";
     }
+
+    public String getText() {
+        return text;
+    }
+
+    public Float getConfidence() {
+        return confidence;
+    }
 }
