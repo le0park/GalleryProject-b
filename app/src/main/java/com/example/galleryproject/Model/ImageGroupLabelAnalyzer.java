@@ -159,4 +159,26 @@ public class ImageGroupLabelAnalyzer {
         return result;
     }
 
+    @Override
+    public String toString() {
+        if (X == null) {
+            return "";
+        }
+
+
+        StringBuffer sb = new StringBuffer();
+        sb.append("{ \n");
+        for (double[] element: X) {
+            sb.append("  { ");
+            for (double ex: element) {
+                sb.append(ex);
+                sb.append(", ");
+            }
+            sb.append("}, \n");
+        }
+        sb.append("}");
+
+        return sb.toString();
+    }
+
 }
