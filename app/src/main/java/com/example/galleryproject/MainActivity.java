@@ -31,8 +31,7 @@ public class MainActivity extends AppCompatActivity {
 
         requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1001);
 
-        SurveyDialogFragment survey = SurveyDialogFragment.getInstance();
-        survey.show(getSupportFragmentManager(), "Surey Dialog");
+
 
         BottomNavigationView navView = findViewById(R.id.nav_view);
         // Passing each menu ID as a set of Ids because each
@@ -52,17 +51,6 @@ public class MainActivity extends AppCompatActivity {
 //        }
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
-//        NavigationUI.setupWithNavController(navView, navController);
+        NavigationUI.setupWithNavController(navView, navController);
     }
-
-    public void setObjectPriority(List<String> list){
-        objectPriority.addAll(list);
-//        String text = "";
-//
-//        for(String t : objectPriority)
-//            text += t + " ";
-//
-//        Log.e("CATEGORIZE_MAIN", text);
-    }
-
 }

@@ -18,6 +18,7 @@ import com.example.galleryproject.MainActivity;
 import com.example.galleryproject.R;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class SurveyDialogFragment extends DialogFragment implements SurveyAdapter.StartDragListener{
     private TextView survey_textView;
@@ -29,11 +30,17 @@ public class SurveyDialogFragment extends DialogFragment implements SurveyAdapte
 
     private ArrayList<String> categories;
 
+    private SurveyClickListener listener;
+
     public SurveyDialogFragment() {}
 
     public static SurveyDialogFragment getInstance() {
         SurveyDialogFragment surveyDialogFragment = new SurveyDialogFragment();
         return surveyDialogFragment;
+    }
+
+    public void setSurveyClickListener(SurveyClickListener listener){
+        this.listener = listener;
     }
 
     @NonNull
@@ -58,7 +65,8 @@ public class SurveyDialogFragment extends DialogFragment implements SurveyAdapte
 //                text += t + " ";
 //
 //            Log.e("CATEGORIZE_FRAGMENT", text);
-            ((MainActivity) getActivity()).setObjectPriority(categories);
+//            ((MainActivity) getActivity()).setObjectPriority(categories);
+            listener.OnSurveyClick(categories);
             this.dismiss();
         });
 
@@ -84,5 +92,9 @@ public class SurveyDialogFragment extends DialogFragment implements SurveyAdapte
     @Override
     public void requestDrag(RecyclerView.ViewHolder viewHolder) {
         mItemTouchHelper.startDrag(viewHolder);
+    }
+
+    public List<String> getObjectPriority(){
+        return categories;
     }
 }

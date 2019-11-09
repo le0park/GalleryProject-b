@@ -30,6 +30,8 @@ import com.example.galleryproject.R;
 import com.example.galleryproject.TopCalendarLayout;
 
 import com.example.galleryproject.Model.ImageGroup;
+import com.example.galleryproject.ui.survey.SurveyClickListener;
+import com.example.galleryproject.ui.survey.SurveyDialogFragment;
 
 import java.io.File;
 import java.time.LocalDate;
@@ -64,12 +66,27 @@ public class TimeLineFragment extends Fragment {
     private List<File> targetFiles;
     private List<Image> selectedImages;
 
+    private List<String> objectPriority = new ArrayList<>();
+
     private AppDatabase mDb;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
 
         View root = inflater.inflate(R.layout.fragment_timeline, container, false);
+
+        SurveyDialogFragment survey = SurveyDialogFragment.getInstance();
+        survey.show(getChildFragmentManager(), "Surey Dialog");
+        survey.setSurveyClickListener(new SurveyClickListener() {
+            @Override
+            public void OnSurveyClick(ArrayList<String> list) {
+                objectPriority.addAll(list);
+//                StringBuilder sb = new StringBuilder();
+//                for(String s: objectPriority)
+//                    sb.append(s);
+//                Log.e("TIMELINE : ", sb.toString());
+            }
+        });
 
         timeLineRecyclerView = root.findViewById(R.id.timeLineRecyclerView);
         timeLineRecyclerView.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
