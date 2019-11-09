@@ -79,5 +79,10 @@ dependencies {
     implementation "androidx.room:room-guava:$room_version"
 
     testImplementation "androidx.room:room-testing:$room_version"
+
+    /**
+     * Android Debug Database
+     */
+    debugImplementation 'com.amitshekhar.android:debug-db:1.0.6'
 }
 apply plugin: 'com.google.gms.google-services'
