@@ -406,7 +406,7 @@ public class TimeLineFragment extends Fragment {
                     List<Image> targetImages = new ArrayList<>(selectedImages);
                     targetImages.removeIf((image) -> {
                         LocalDateTime t = image.getCreationTime();
-                        return t.compareTo(start) <= 0 || t.compareTo(finish) > 0;
+                        return t.compareTo(start) < 0 || t.compareTo(finish) > 0;
                     });
 
                     // 다음 시간 클러스터링 실행
