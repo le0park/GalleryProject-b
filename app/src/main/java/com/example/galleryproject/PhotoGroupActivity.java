@@ -46,7 +46,6 @@ public class PhotoGroupActivity extends AppCompatActivity {
     private List<ImageGroup> imageGroups;
     private List<Boolean> selected;
 
-    private List<Image> images = new ArrayList<>();
 
 
     @Override
@@ -62,9 +61,9 @@ public class PhotoGroupActivity extends AppCompatActivity {
         imageGroups = imageCollection.getGroups();
 
         // image list flattening
-        images = imageGroups.stream()
-                            .map(x -> x.getImages())
-                            .flatMap(x -> x.stream())
+        List<Image> images = imageGroups.stream()
+                            .map(ImageGroup::getImages)
+                            .flatMap(List::stream)
                             .collect(Collectors.toList());
 
         selected = imageGroups.stream()
@@ -72,7 +71,7 @@ public class PhotoGroupActivity extends AppCompatActivity {
                             .collect(Collectors.toList());
 
         List<File> files = images.stream()
-                                 .map(x -> x.getFile())
+                                 .map(Image::getFile)
                                  .collect(Collectors.toList());
 
 
@@ -84,41 +83,29 @@ public class PhotoGroupActivity extends AppCompatActivity {
         photoGroup_Memo_textView = findViewById(R.id.photoGroup_Memo_textView);
 
         photoGroup_date_textView.setText(imageCollection.getDate().toString());
+        photoGroup_Memo_textView.setText(imageCollection.getMemo());
 
-        photoGroup_Memo_textView.setText(imageCollection.getMemo() + "\n");
-
-        photoGroup_Memo_textView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                photoGroup_Memo_textView.setVisibility(View.GONE);
-                photoGroup_Memo_editText.setVisibility(View.VISIBLE);
-                photoGroup_Memo_editText.setText(photoGroup_Memo_textView.getText());
-                photoGroup_Memo_editText.setSelection(photoGroup_Memo_textView.getText().length());
-                photoGroup_Memo_editText.requestFocus();
-                imm.showSoftInput(photoGroup_Memo_editText,0);
-                saveButton.setVisibility(View.VISIBLE);
-            }
+        photoGroup_Memo_textView.setOnClickListener((view) -> {
+            photoGroup_Memo_textView.setVisibility(View.GONE);
+            photoGroup_Memo_editText.setVisibility(View.VISIBLE);
+            photoGroup_Memo_editText.setText(photoGroup_Memo_textView.getText());
+            photoGroup_Memo_editText.setSelection(photoGroup_Memo_textView.getText().length());
+            photoGroup_Memo_editText.requestFocus();
+            imm.showSoftInput(photoGroup_Memo_editText,0);
+            saveButton.setVisibility(View.VISIBLE);
         });
 
-        saveButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                photoGroup_Memo_editText.setVisibility(View.GONE);
-                photoGroup_Memo_textView.setVisibility(View.VISIBLE);
-                photoGroup_Memo_textView.setText(photoGroup_Memo_editText.getText());
-                photoGroup_Memo_editText.clearFocus();
-                imm.hideSoftInputFromWindow(photoGroup_Memo_editText.getWindowToken(), 0);
-                saveButton.setVisibility(View.GONE);
-                //TODO 수정한 메모 저장
-            }
+        saveButton.setOnClickListener((view) -> {
+            photoGroup_Memo_editText.setVisibility(View.GONE);
+            photoGroup_Memo_textView.setVisibility(View.VISIBLE);
+            photoGroup_Memo_textView.setText(photoGroup_Memo_editText.getText());
+            photoGroup_Memo_editText.clearFocus();
+            imm.hideSoftInputFromWindow(photoGroup_Memo_editText.getWindowToken(), 0);
+            saveButton.setVisibility(View.GONE);
+            //TODO 수정한 메모 저장
         });
 
-        photoGroup_backButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                finish();
-            }
-        });
+        photoGroup_backButton.setOnClickListener((view) -> finish());
 
         photoGroup_RecyclerView = findViewById(R.id.photoGroup_RecyclerView);
         photoGroup_RecyclerView.setLayoutManager(new GridLayoutManager(getApplicationContext(), 2));
@@ -128,17 +115,19 @@ public class PhotoGroupActivity extends AppCompatActivity {
                                                     .map(x -> x.getImages().contains(image))
                                                     .collect(Collectors.toList());
 
-            StringBuffer msg1 = new StringBuffer();
+            StringBuilder msg1 = new StringBuilder();
             for (Boolean b: nowSelected) {
-                msg1.append(b + ", ");
+                msg1.append(b)
+                    .append(", ");
             }
 
             Log.e("PhotoGroupActivity", nowSelected.size() + "");
             Log.e("PhotoGroupActivity", msg1.toString());
 
-            StringBuffer msg2 = new StringBuffer();
+            StringBuilder msg2 = new StringBuilder();
             for (Boolean b: selected) {
-                msg2.append(b + ", ");
+                msg2.append(b)
+                    .append(", ");
             }
 
             Log.e("PhotoGroupActivity", selected.size() + "");
@@ -150,7 +139,7 @@ public class PhotoGroupActivity extends AppCompatActivity {
                     selected.set(i, !current);
 
                     String currentMemo = imageCollection.getMemo();
-                    imageCollection.setMemo(currentMemo + "/// " + i + "\n");
+                    imageCollection.setMemo(currentMemo + "\n/// " + i);
                     photoGroup_Memo_textView.setText(imageCollection.getMemo());
                 }
             }
@@ -164,26 +153,25 @@ public class PhotoGroupActivity extends AppCompatActivity {
     class Adapter extends RecyclerView.Adapter<Adapter.ViewHolder>{
         private List<Image> images;
         private OnItemClickListener listener;
-        public Adapter(List<Image> images, OnItemClickListener listener){
+
+        Adapter(List<Image> images, OnItemClickListener listener){
             this.images = images;
             this.listener = listener;
 //            for(String filepath : filePaths)
 //                Log.e("Adapter : ", filepath);
         }
 
-        public class ViewHolder extends RecyclerView.ViewHolder {
+        class ViewHolder extends RecyclerView.ViewHolder {
             ImageView imageView;
 
 
             ViewHolder(View itemView) {
                 super(itemView) ;
-                imageView = (ImageView) itemView.findViewById(R.id.photoGroupItem_ImageView);
+                imageView = itemView.findViewById(R.id.photoGroupItem_ImageView);
             }
 
-            public void bind(final Image image, final OnItemClickListener listener) {
-                imageView.setOnClickListener((v)->{
-                    listener.OnItemClick(image);
-                });
+            void bind(final Image image, final OnItemClickListener listener) {
+                imageView.setOnClickListener((v) -> listener.OnItemClick(image));
             }
         }
 
@@ -193,10 +181,10 @@ public class PhotoGroupActivity extends AppCompatActivity {
             Context context = parent.getContext();
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
-            View view = inflater.inflate(R.layout.photogroup_item, parent, false) ;
-            Adapter.ViewHolder vh = new Adapter.ViewHolder(view) ;
 
-            return vh ;
+            View view = inflater.inflate(R.layout.photogroup_item, parent, false);
+
+            return new Adapter.ViewHolder(view);
         }
 
         @Override
