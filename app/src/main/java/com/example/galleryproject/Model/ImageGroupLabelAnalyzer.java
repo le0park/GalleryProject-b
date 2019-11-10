@@ -18,14 +18,7 @@ public class ImageGroupLabelAnalyzer {
 
     private boolean analyzed = false;
 
-    public ImageGroupLabelAnalyzer() {
-        /**
-         * ToDo: labelPriority 구현되면 삭제해야함.
-         */
-        int max = 3;
-        int min = 0;
-        this.labelPriority = new int[]{0, 3, 1, 2, 4};
-    }
+    public ImageGroupLabelAnalyzer() { }
 
     public void setGroups(List<ImageGroup> all) {
         this.all = all;
@@ -36,6 +29,15 @@ public class ImageGroupLabelAnalyzer {
     public void setLabelGroups(List<List<LabelGroup>> allLabelGroups) {
         this.allLabelGroups = allLabelGroups;
         this.analyzed = false;
+    }
+
+    public static void setLabelPriority(int[] priority) {
+        Log.d("ImageGroupLabelAnalyzer", "priority: " + priority.toString());
+        labelPriority = priority;
+    }
+
+    public static boolean hasLabelPriority() {
+        return labelPriority != null;
     }
 
 

@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.example.galleryproject.Model.Image;
 import com.example.galleryproject.R;
 
 import java.io.File;
@@ -18,12 +19,12 @@ import java.util.List;
 
 public class TimeLineHorizontalAdapter extends RecyclerView.Adapter<TimeLineHorizontalAdapter.TimeLineHorizontalViewHolder> {
 
-    private List<String> paths;
+    private List<Image> images;
     private Context context;
 
-    public TimeLineHorizontalAdapter(Context context, List<String> paths){
+    public TimeLineHorizontalAdapter(Context context, List<Image> images){
         this.context = context;
-        this.paths = paths;
+        this.images = images;
     }
 
     public class TimeLineHorizontalViewHolder extends RecyclerView.ViewHolder{
@@ -48,12 +49,12 @@ public class TimeLineHorizontalAdapter extends RecyclerView.Adapter<TimeLineHori
     @Override
     public void onBindViewHolder(@NonNull TimeLineHorizontalViewHolder holder, int position) {
         Glide.with(context)
-                .load(new File(paths.get(position)))
+                .load(images.get(position).getFile())
                 .into(holder.timeLine_solo_ImageView);
     }
 
     @Override
     public int getItemCount() {
-        return paths.size();
+        return images.size();
     }
 }
