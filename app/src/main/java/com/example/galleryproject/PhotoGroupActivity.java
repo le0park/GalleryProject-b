@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,11 +20,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.example.galleryproject.Model.Image;
+import com.example.galleryproject.Model.ImageCollection;
 import com.example.galleryproject.ui.all.AllRecyclerViewDecoration;
 import com.example.galleryproject.Model.ImageGroup;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class PhotoGroupActivity extends AppCompatActivity {
     private TextView photoGroup_date_textView;
@@ -37,6 +42,13 @@ public class PhotoGroupActivity extends AppCompatActivity {
     private Adapter adapter;
     private RecyclerView photoGroup_RecyclerView;
 
+    private ImageCollection imageCollection;
+    private List<ImageGroup> imageGroups;
+    private List<Boolean> selected;
+
+    private List<Image> images = new ArrayList<>();
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,7 +58,23 @@ public class PhotoGroupActivity extends AppCompatActivity {
         actionBar.hide();
 
         Bundle bundle = getIntent().getExtras();
-        ImageGroup imageGroup = bundle.getParcelable("ImageGroup");
+        imageCollection = bundle.getParcelable("ImageCollection");
+        imageGroups = imageCollection.getGroups();
+
+        // image list flattening
+        images = imageGroups.stream()
+                            .map(x -> x.getImages())
+                            .flatMap(x -> x.stream())
+                            .collect(Collectors.toList());
+
+        selected = imageGroups.stream()
+                            .map(x -> false)
+                            .collect(Collectors.toList());
+
+        List<File> files = images.stream()
+                                 .map(x -> x.getFile())
+                                 .collect(Collectors.toList());
+
 
         imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
         saveButton = findViewById(R.id.saveButton);
@@ -55,9 +83,10 @@ public class PhotoGroupActivity extends AppCompatActivity {
         photoGroup_Memo_editText = findViewById(R.id.photoGroup_Memo_editText);
         photoGroup_Memo_textView = findViewById(R.id.photoGroup_Memo_textView);
 
-        photoGroup_date_textView.setText(imageGroup.getDate().toString());
+        photoGroup_date_textView.setText(imageCollection.getDate().toString());
 
-        photoGroup_Memo_textView.setText(imageGroup.getMemo());
+        photoGroup_Memo_textView.setText(imageCollection.getMemo() + "\n");
+
         photoGroup_Memo_textView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -93,16 +122,51 @@ public class PhotoGroupActivity extends AppCompatActivity {
 
         photoGroup_RecyclerView = findViewById(R.id.photoGroup_RecyclerView);
         photoGroup_RecyclerView.setLayoutManager(new GridLayoutManager(getApplicationContext(), 2));
-        adapter = new Adapter(imageGroup.getFilePaths());
+        adapter = new Adapter(images, (image) -> {
+
+            List<Boolean> nowSelected = imageGroups.stream()
+                                                    .map(x -> x.getImages().contains(image))
+                                                    .collect(Collectors.toList());
+
+            StringBuffer msg1 = new StringBuffer();
+            for (Boolean b: nowSelected) {
+                msg1.append(b + ", ");
+            }
+
+            Log.e("PhotoGroupActivity", nowSelected.size() + "");
+            Log.e("PhotoGroupActivity", msg1.toString());
+
+            StringBuffer msg2 = new StringBuffer();
+            for (Boolean b: selected) {
+                msg2.append(b + ", ");
+            }
+
+            Log.e("PhotoGroupActivity", selected.size() + "");
+            Log.e("PhotoGroupActivity", msg2.toString());
+
+            for (int i = 0; i < nowSelected.size(); i++) {
+                if (nowSelected.get(i)) {
+                    boolean current = selected.get(i);
+                    selected.set(i, !current);
+
+                    String currentMemo = imageCollection.getMemo();
+                    imageCollection.setMemo(currentMemo + "/// " + i + "\n");
+                    photoGroup_Memo_textView.setText(imageCollection.getMemo());
+                }
+            }
+
+        });
+
         photoGroup_RecyclerView.setAdapter(adapter);
         photoGroup_RecyclerView.addItemDecoration(new AllRecyclerViewDecoration(10));
     }
 
     class Adapter extends RecyclerView.Adapter<Adapter.ViewHolder>{
-        private List<String> filePaths;
-
-        public Adapter(List<String> filePaths){
-            this.filePaths = filePaths;
+        private List<Image> images;
+        private OnItemClickListener listener;
+        public Adapter(List<Image> images, OnItemClickListener listener){
+            this.images = images;
+            this.listener = listener;
 //            for(String filepath : filePaths)
 //                Log.e("Adapter : ", filepath);
         }
@@ -110,9 +174,16 @@ public class PhotoGroupActivity extends AppCompatActivity {
         public class ViewHolder extends RecyclerView.ViewHolder {
             ImageView imageView;
 
+
             ViewHolder(View itemView) {
                 super(itemView) ;
                 imageView = (ImageView) itemView.findViewById(R.id.photoGroupItem_ImageView);
+            }
+
+            public void bind(final Image image, final OnItemClickListener listener) {
+                imageView.setOnClickListener((v)->{
+                    listener.OnItemClick(image);
+                });
             }
         }
 
@@ -131,14 +202,19 @@ public class PhotoGroupActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(@NonNull Adapter.ViewHolder holder, int position) {
             Glide.with(getApplicationContext())
-                    .load(new File(filePaths.get(position)))
+                    .load(images.get(position).getFile())
                     .into(holder.imageView);
+
+            holder.bind(images.get(position), listener);
         }
 
         @Override
         public int getItemCount() {
-            return filePaths.size();
+            return images.size();
         }
     }
 
+    public interface OnItemClickListener {
+        void OnItemClick(Image image);
+    }
 }
