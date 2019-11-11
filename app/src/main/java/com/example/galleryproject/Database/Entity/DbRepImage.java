@@ -1,4 +1,4 @@
-package com.example.galleryproject.Entity;
+package com.example.galleryproject.Database.Entity;
 
 
 import androidx.room.ColumnInfo;
