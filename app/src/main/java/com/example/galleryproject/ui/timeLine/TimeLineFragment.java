@@ -118,39 +118,39 @@ public class TimeLineFragment extends Fragment {
             topCalendar.setYearTextView(year);
             topCalendar.setMonthTextView(month);
         });
-//
-//        targetFiles = getListOfFile();
-//        selectedImages = new ArrayList<>();
-//
-//        for (File file: targetFiles) {
-////            Log.e("ACTIVITY", file.toPath().toString());
-//            selectedImages.add(new UnitImage(file));
-////            Log.e("MainActivity", file.toString() + " UnitImageFile 생성");
-//        }
-//
-//        // 시간 오름차순으로 정렬
-//        selectedImages.sort((i1, i2) -> {
-//            LocalDateTime d1 = i1.getCreationTime();
-//            LocalDateTime d2 = i2.getCreationTime();
-//
-//            return d1.compareTo(d2);
-//        });
-//
-//        for (Image image: selectedImages) {
-////            Log.e("IMAGES_TIME", image.getCreationTime().toString());
-//        }
-//
-//        restImageCount = selectedImages.size();
-//
-//        // 타겟 이미지 리스트 할당
-//        List<Image> targetImages = new ArrayList<>(selectedImages);
-//        targetImages.removeIf((image) -> {
-//            LocalDateTime t = image.getCreationTime();
-//            return t.compareTo(start) >= 0 && t.compareTo(finish) < 0;
-//        });
-//
-//        new ImageGroupAsyncTask(() -> {})
-//                .execute(targetImages.toArray(new Image[targetImages.size()]));
+
+        targetFiles = getListOfFile();
+        selectedImages = new ArrayList<>();
+
+        for (File file: targetFiles) {
+//            Log.e("ACTIVITY", file.toPath().toString());
+            selectedImages.add(new UnitImage(file));
+//            Log.e("MainActivity", file.toString() + " UnitImageFile 생성");
+        }
+
+        // 시간 오름차순으로 정렬
+        selectedImages.sort((i1, i2) -> {
+            LocalDateTime d1 = i1.getCreationTime();
+            LocalDateTime d2 = i2.getCreationTime();
+
+            return d1.compareTo(d2);
+        });
+
+        for (Image image: selectedImages) {
+//            Log.e("IMAGES_TIME", image.getCreationTime().toString());
+        }
+
+        restImageCount = selectedImages.size();
+
+        // 타겟 이미지 리스트 할당
+        List<Image> targetImages = new ArrayList<>(selectedImages);
+        targetImages.removeIf((image) -> {
+            LocalDateTime t = image.getCreationTime();
+            return t.compareTo(start) >= 0 && t.compareTo(finish) < 0;
+        });
+
+        new ImageGroupAsyncTask(() -> {})
+                .execute(targetImages.toArray(new Image[targetImages.size()]));
 
         return root;
     }
