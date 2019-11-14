@@ -26,8 +26,5 @@ public class ImageGroupAdapter extends DbImageGroup {
                 finish = target;
             }
         }
-
-        this.setStartTime(start);
-        this.setFinishTime(finish);
     }
 }
