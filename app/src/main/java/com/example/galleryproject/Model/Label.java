@@ -5,6 +5,12 @@ public class Label {
     protected String entityId;
     protected Float confidence;
 
+    public Label() {
+        this.text = new String();
+        this.entityId = new String();
+        this.confidence = -1.0f;
+    }
+
     public Label(String text, String entityId, Float confidence) {
         this.text = text;
         this.entityId = entityId;

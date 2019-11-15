@@ -32,6 +32,9 @@ public interface DbImageDao {
     @Query("SELECT EXISTS(SELECT 1 FROM image WHERE path = :path);")
     Boolean checkIfExist(File path);
 
+    @Query("SELECT * FROM image WHERE path = :path;")
+    long getId(File path);
+
     @Insert
     void insert(DbImage dbImage);
 
