@@ -17,21 +17,24 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.galleryproject.Model.Image;
+import com.example.galleryproject.Model.ImageCollection;
 import com.example.galleryproject.Model.ImageGroup;
 import com.example.galleryproject.PhotoGroupActivity;
 import com.example.galleryproject.R;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import xyz.sangcomz.stickytimelineview.TimeLineRecyclerView;
 
 public class TimeLineRecyclerViewAdapter extends TimeLineRecyclerView.Adapter<TimeLineRecyclerViewAdapter.TimeLineRecyclerViewHolder> {
-    private List<ImageGroup> imageGroups;
+    private List<ImageCollection> imageCollections;
     private Context context;
 
-    public TimeLineRecyclerViewAdapter(Context context, List<ImageGroup> imageGroups) {
+    public TimeLineRecyclerViewAdapter(Context context, List<ImageCollection> imageCollections) {
         this.context = context;
-        this.imageGroups = imageGroups;
+        this.imageCollections = imageCollections;
     }
 
     @NonNull
@@ -46,9 +49,18 @@ public class TimeLineRecyclerViewAdapter extends TimeLineRecyclerView.Adapter<Ti
 
     @Override
     public void onBindViewHolder(@NonNull TimeLineRecyclerViewHolder holder, int position) {
-        List<String> paths = imageGroups.get(position).getFilePaths();
+        ImageCollection collection = imageCollections.get(position);
 
-        TimeLineHorizontalAdapter adapter = new TimeLineHorizontalAdapter(context, paths);
+        List<ImageGroup> imageGroups = collection.getGroups();
+
+        List<Image> images = imageGroups.stream()
+                                        .map(x -> x.getImages())
+                                        .flatMap(x -> x.stream())
+                                        .collect(Collectors.toList());
+
+
+        TimeLineHorizontalAdapter adapter = new TimeLineHorizontalAdapter(context, images);
+
         holder.imageRecyclerView.setHasFixedSize(true);
         holder.imageRecyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false));
         holder.imageRecyclerView.setAdapter(adapter);
@@ -59,12 +71,12 @@ public class TimeLineRecyclerViewAdapter extends TimeLineRecyclerView.Adapter<Ti
             holder.imageRecyclerView.addItemDecoration(decorator);
         }
 
-        setReadMore(holder.memoView, imageGroups.get(position).getMemo(), 2);
+        setReadMore(holder.memoView, imageCollections.get(position).getMemo(), 2);
     }
 
     @Override
     public int getItemCount() {
-        return imageGroups.size();
+        return imageCollections.size();
     }
 
     public static void setReadMore(final TextView view, final String text, final int maxLine) {
@@ -157,10 +169,10 @@ public class TimeLineRecyclerViewAdapter extends TimeLineRecyclerView.Adapter<Ti
 
                 int position = getAdapterPosition();
                 if(position != RecyclerView.NO_POSITION){
-                    ImageGroup imageGroup = imageGroups.get(position);
+                    ImageCollection collection = imageCollections.get(position);
 
                     Intent intent = new Intent(context, PhotoGroupActivity.class);
-                    intent.putExtra("ImageGroup", imageGroup);
+                    intent.putExtra("ImageCollection", collection);
                     context.startActivity(intent);
                 }
             });

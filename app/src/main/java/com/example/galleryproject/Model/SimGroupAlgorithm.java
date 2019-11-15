@@ -14,7 +14,7 @@ import java.util.Comparator;
 import java.util.List;
 
 public class SimGroupAlgorithm implements IGroupAlgorithm {
-    private static final int MAX_DISTANCE = 16;
+    private static final int MAX_DISTANCE = 20;
     private static final int MIN_POINTS = 1;
 
     @Override

@@ -14,12 +14,9 @@ import java.nio.file.attribute.FileTime;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
-import javax.annotation.Nullable;
 
 public abstract class Image implements Serializable, Parcelable {
     private File file;
@@ -81,6 +78,30 @@ public abstract class Image implements Serializable, Parcelable {
 
     public void setLongitude(double lng) {
         this.longitude = lng;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+
+        if (o instanceof Image) {
+            Image i = (Image) o;
+
+            String s1 = this.file.toPath().toString();
+            String so = i.file.toPath().toString();
+            return so.equals(s1);
+        }
+
+        if (o instanceof File) {
+            File f = (File) o;
+            Log.e("Image", f.toPath().toString());
+            Log.e("Image", this.file.toPath().toString());
+            return this.file.equals(f);
+        }
+
+        return false;
     }
 
 

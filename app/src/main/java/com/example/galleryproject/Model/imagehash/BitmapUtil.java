@@ -48,7 +48,7 @@ public class BitmapUtil {
             Matrix m = new Matrix();
             RectF inRect = new RectF(0, 0, roughBitmap.getWidth(), roughBitmap.getHeight());
             RectF outRect = new RectF(0, 0, dstWidth, dstHeight);
-            m.setRectToRect(inRect, outRect, Matrix.ScaleToFit.CENTER);
+            m.setRectToRect(inRect, outRect, Matrix.ScaleToFit.FILL);
             float[] values = new float[9];
             m.getValues(values);
 
