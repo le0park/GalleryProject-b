@@ -3,8 +3,12 @@ package com.example.galleryproject.ui.survey;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.os.Bundle;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -23,7 +27,7 @@ import java.util.List;
 
 public class SurveyDialogFragment extends DialogFragment implements SurveyAdapter.StartDragListener{
     private TextView survey_textView;
-    private Button survey_complete_button;
+    private ImageButton survey_complete_button;
     private RecyclerView survey_recyclerView;
 
     private SurveyAdapter adapter;
@@ -56,8 +60,8 @@ public class SurveyDialogFragment extends DialogFragment implements SurveyAdapte
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.create().getWindow().setLayout(200,400);
         View view = getActivity().getLayoutInflater().inflate(R.layout.survey_dialog, null);
-
         builder.setView(view);
 
         survey_textView = view.findViewById(R.id.survey_textView);
@@ -67,7 +71,6 @@ public class SurveyDialogFragment extends DialogFragment implements SurveyAdapte
         dialog.setCanceledOnTouchOutside(false);
 
         survey_complete_button.setOnClickListener((v) -> {
-
             listener.OnSurveyClick(categories);
             this.dismiss();
         });
