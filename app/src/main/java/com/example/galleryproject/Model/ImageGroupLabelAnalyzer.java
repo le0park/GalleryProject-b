@@ -103,7 +103,6 @@ public class ImageGroupLabelAnalyzer {
                     continue;
                 }
 
-//                int[] labelCounter = this.labelCounters.get(groupIdx);
                 /**
                  * 유사 그룹 내 대표 레이블 사진 장수 / 전체 그룹 사진 장수
                  */

@@ -11,12 +11,10 @@ import com.example.galleryproject.Database.Dao.DbImageCollectionDao;
 import com.example.galleryproject.Database.Dao.DbImageDao;
 import com.example.galleryproject.Database.Dao.DbImageGroupDao;
 import com.example.galleryproject.Database.Dao.DbImagesWithImageGroupDao;
-import com.example.galleryproject.Database.Dao.DbInputDataDao;
 import com.example.galleryproject.Database.Dao.DbMlkitLabelDao;
 import com.example.galleryproject.Database.Entity.DbImage;
 import com.example.galleryproject.Database.Entity.DbImageCollection;
 import com.example.galleryproject.Database.Entity.DbImageGroup;
-import com.example.galleryproject.Database.Entity.DbInputData;
 import com.example.galleryproject.Database.Entity.DbLabel;
 import com.example.galleryproject.Database.Entity.DbRepImage;
 
