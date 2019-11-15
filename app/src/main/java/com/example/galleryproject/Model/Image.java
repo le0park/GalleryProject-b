@@ -88,7 +88,10 @@ public abstract class Image implements Serializable, Parcelable {
 
         if (o instanceof Image) {
             Image i = (Image) o;
-            return this.file == i.file;
+
+            String s1 = this.file.toPath().toString();
+            String so = i.file.toPath().toString();
+            return so.equals(s1);
         }
 
         if (o instanceof File) {

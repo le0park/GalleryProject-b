@@ -20,10 +20,15 @@ import com.example.galleryproject.BottomCalendarLayout;
 import com.example.galleryproject.Database.AppDatabase;
 import com.example.galleryproject.Database.AppExecutors;
 import com.example.galleryproject.Database.Entity.DbImage;
+import com.example.galleryproject.Database.Entity.DbImageCollection;
 import com.example.galleryproject.Database.Entity.DbImageGroup;
 import com.example.galleryproject.Database.Entity.DbLabel;
+import com.example.galleryproject.Model.Adapter.DbImageAdapter;
+import com.example.galleryproject.Model.Adapter.DbImageCollectionAdapter;
+import com.example.galleryproject.Model.Adapter.DbImageGroupAdapter;
 import com.example.galleryproject.Model.Adapter.ImageAdapter;
 import com.example.galleryproject.Model.Adapter.ImageCollectionAdapter;
+import com.example.galleryproject.Model.Adapter.ImageGroupAdapter;
 import com.example.galleryproject.Model.Adapter.LabelAdapter;
 import com.example.galleryproject.Model.Category;
 import com.example.galleryproject.Model.Image;
@@ -53,6 +58,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import kotlin.Suppress;
 import xyz.sangcomz.stickytimelineview.RecyclerSectionItemDecoration;
 import xyz.sangcomz.stickytimelineview.TimeLineRecyclerView;
 import xyz.sangcomz.stickytimelineview.model.SectionInfo;
@@ -81,7 +87,9 @@ public class TimeLineFragment extends Fragment {
 
     private AppDatabase mDb;
     private ImageGroupLabelAnalyzer analyzer = new ImageGroupLabelAnalyzer();
-    private CountDownLatch latch;
+
+    private int imageOrderIdx = 0;
+    private List<List<Image>> partedImages;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -121,56 +129,82 @@ public class TimeLineFragment extends Fragment {
         });
 
 
-        // 데이터베이스 테스트
+
+
+        // 데이터베이스 생성
         mDb = AppDatabase.getInstance(getContext());
 
-        // 이미지 파일 목록 추출
-        targetFiles = getListOfFile();
-        selectedImages = new ArrayList<>();
+        AppExecutors.getInstance().diskIO().execute(() -> {
+            List<ImageCollection> collections = new ArrayList<>();
 
-        for (File file: targetFiles) {
-//            Log.e("ACTIVITY", file.toPath().toString());
-            selectedImages.add(new UnitImage(file));
-        }
+            List<DbImageCollection> dbCollections = mDb.dbImageCollectionDao().getAll();
+            for (DbImageCollection dbCollection: dbCollections) {
+                List<DbImageGroup> dbImageGroups =
+                        mDb.dbImageGroupDao().loadAllWithCollectionId(dbCollection.id);
 
+                List<ImageGroup> imageGroups = new ArrayList<>();
+                for (DbImageGroup group: dbImageGroups) {
+                    List<DbImage> dbImages = mDb.dbImageDao().loadWithGroupId(group.id);
+                    List<Image> newImages = dbImages.stream()
+                            .map(x -> new DbImageAdapter(x))
+                            .collect(Collectors.toList());
 
-        // 시간 오름차순으로 정렬
-        selectedImages.sort((i1, i2) -> {
-            LocalDateTime d1 = i1.getCreationTime();
-            LocalDateTime d2 = i2.getCreationTime();
+                    imageGroups.add(new DbImageGroupAdapter(group, newImages));
+                }
 
-            return d1.compareTo(d2);
-        });
-
-        // 사진 갯수
-        restImageCount = selectedImages.size();
-
-
-        SurveyDialogFragment survey = SurveyDialogFragment.getInstance();
-        survey.show(getChildFragmentManager(), "Survey Dialog");
-        survey.setSurveyClickListener((ArrayList<String> categories) -> {
-            for (String category: categories) {
-                objectPriority.add(
-                        Category.getValue(category));
+                collections.add(new DbImageCollectionAdapter(dbCollection, imageGroups));
             }
 
-            objectPriority.add(Category.ETC);
-
-            int[] priority = objectPriority.stream()
-                    .mapToInt(Integer::intValue)
-                    .toArray();
-
-            ImageGroupLabelAnalyzer.setLabelPriority(priority);
-
-            // 타겟 이미지 리스트 할당
-            List<Image> targetImages = new ArrayList<>(selectedImages);
-            targetImages.removeIf((image) -> {
-                LocalDateTime t = image.getCreationTime();
-                return t.compareTo(start) < 0 || t.compareTo(finish) > 0;
+            AppExecutors.getInstance().mainThread().execute(()->{
+                timeLineViewModel.insertAll(collections);
             });
 
-            new ImageGroupAsyncTask(() -> {})
-                    .execute(targetImages.toArray(new Image[targetImages.size()]));
+
+
+
+            // 이미지 파일 목록 추출
+            targetFiles = getListOfFile();
+            selectedImages = targetFiles.stream()
+                                        .map(UnitImage::new)
+                                        .collect(Collectors.toList());
+
+            // 이미 데이터베이스에 저장되어 있는 파일 제거
+            List<DbImage> dbImages = mDb.dbImageDao().getAll();
+            List<Image> newImages = dbImages.stream()
+                                            .map(x -> new DbImageAdapter(x))
+                                            .collect(Collectors.toList());
+
+            selectedImages.removeIf((image) -> newImages.contains(image));
+
+
+            imageOrderIdx = 0;
+            partedImages = splitImagesInDayRange(selectedImages, 7);
+
+            AppExecutors.getInstance().mainThread().execute(()->{
+                SurveyDialogFragment survey = SurveyDialogFragment.getInstance();
+                survey.show(getChildFragmentManager(), "Survey Dialog");
+                survey.setSurveyClickListener((ArrayList<String> categories) -> {
+                    for (String category: categories) {
+                        objectPriority.add(
+                                Category.getValue(category));
+                    }
+
+                    objectPriority.add(Category.ETC);
+
+                    int[] priority = objectPriority.stream()
+                            .mapToInt(Integer::intValue)
+                            .toArray();
+
+                    ImageGroupLabelAnalyzer.setLabelPriority(priority);
+
+                    if (partedImages.size() > 0) {
+                        Image[] images = partedImages.get(imageOrderIdx).stream()
+                                .toArray(Image[]::new);
+
+                        new ImageGroupAsyncTask(() -> {}).execute(images);
+                    }
+                });
+            });
         });
 
         return root;
@@ -229,6 +263,73 @@ public class TimeLineFragment extends Fragment {
     }
 
 
+    /**
+     * 정렬된 image를 일 간격에 맞게 분리함.
+     * image는 오름차순.
+     * @param images
+     * @param days
+     * @return
+     */
+    private List<List<Image>> splitImagesInDayRange(List<Image> images, int days) {
+        sortImages(images, 0);
+
+        List<List<Image>> partitioned = new ArrayList<>();
+
+        LocalDateTime line = null;
+
+        int startIdx = 0, finishIdx = 0, i = 0;
+        while (i <= images.size()) {
+            if (line == null && i == images.size()) {
+                i += 1;
+                continue;
+            }
+
+            if (i == images.size()) {
+                List<Image> part = images.subList(startIdx, i);
+                partitioned.add(part);
+                i += 1;
+                continue;
+            }
+
+            Image im = images.get(i);
+            if (line == null) {
+                line = im.getCreationTime();
+                i += 1;
+                continue;
+            }
+
+            LocalDateTime start = line.minusDays(days);
+            LocalDateTime imTime = im.getCreationTime();
+            if(imTime.isBefore(start)) {
+                finishIdx = i;
+
+                List<Image> part = images.subList(startIdx, finishIdx);
+                partitioned.add(part);
+
+                startIdx = finishIdx;
+                line = null;
+                continue;
+            }
+
+            i++;
+        }
+
+        return partitioned;
+    }
+
+    private static void sortImages(List<Image> images, int order) {
+        // 시간 오름차순으로 정렬
+        images.sort((i1, i2) -> {
+            LocalDateTime d1 = i1.getCreationTime();
+            LocalDateTime d2 = i2.getCreationTime();
+
+            if (order > 0) {
+                return d1.compareTo(d2);
+            } else {
+                return d2.compareTo(d1);
+            }
+        });
+    }
 
     private List<File> getListOfFile() {
         File baseDirectory = null;
@@ -281,67 +382,77 @@ public class TimeLineFragment extends Fragment {
         public void onPostExecute(List<ImageGroup> groups) {
             Toast.makeText(getContext(), groups.size() + "개로 유사도 그룹 완료.", Toast.LENGTH_SHORT).show();
 
-//            List<Image> resultImages = new ArrayList<>();
-//            for (ImageGroup group: groups){
-////                Log.e("SIMGROUP_THREAD", group.toString() + " | size: " + group.getImages().size());
-//                resultImages.addAll(group.getImages());
-//            }
-
             ImageCollection result = new ImageCollection(groups);
-//            ImageGroup result = new UnitImageGroup(resultImages);
 
+            // MLkit labeling thread
             new AsyncLabelingTask((labelGroups) -> {
+                // callback
                 analyzer.setGroups(groups);
                 analyzer.setLabelGroups(labelGroups);
                 analyzer.analyze();
 
-                Log.e("LABEL_ANALYZER", "size: " + groups.size());
-                Log.e("LABEL_ANALYZER", analyzer.toString());
-
+                timeLineViewModel.insert(result);
                 listener.onFinished();
 
-                result.setMemo(analyzer.toString());
-                timeLineViewModel.insert(result);
-
+                // 생성된 타임라인 저장 thread
                 AppExecutors.getInstance().diskIO().execute(() -> {
-                    // doSomething();
-                    DbImageGroup newDbImageGroup = new ImageCollectionAdapter(result);
-                    List<Image> newImages = result.getGroups().stream()
-                                                              .map(x -> x.getImages())
-                                                              .flatMap(x -> x.stream())
+                    DbImageCollection newDbImageCollection = new ImageCollectionAdapter(result);
+
+                    // DbImageCollection <- DbImageGroup
+                    List<DbImageGroup> newDbImageGroups =
+                            result.getGroups().stream()
+                                            .map(x -> new ImageGroupAdapter(x))
+                                            .collect(Collectors.toList());
+
+                    List<Long> dbImageGroupIds =
+                            mDb.dbImageCollectionDao().insertWithGroups(newDbImageCollection, newDbImageGroups);
+
+                    List<List<Image>> newGroupOfImages = result.getGroups().stream()
+                                                              .map(ImageGroup::getImages)
                                                               .collect(Collectors.toList());
 
-                    List<DbImage> newDbImages = newImages.stream()
-                                                         .map(x -> new ImageAdapter(x))
-                                                         .collect(Collectors.toList());
+                    // DbGroup <- DbImage
+                    List<Long> dbImageIds = null;
+                    for (int i = 0; i < dbImageGroupIds.size(); i++) {
+                        Long groupId = dbImageGroupIds.get(i);
 
+                        List<Image> iImageGroup = newGroupOfImages.get(i);
+                        List<DbImage> newDbImages = iImageGroup.stream()
+                                .map(x -> new ImageAdapter(x))
+                                .collect(Collectors.toList());
 
-                    List<LabelGroup> flatLabelGroups = labelGroups.stream()
-                                                                  .flatMap(List::stream)
-                                                                  .collect(Collectors.toList());
+                        dbImageIds = mDb.imagesWithImageGroupDao()
+                                .insertImagesWithImageGroupId(groupId, newDbImages);
 
-                    List<List<DbLabel>> allLabelGroups = new ArrayList<>();
-                    for (LabelGroup group: flatLabelGroups) {
-                        List<DbLabel> labels = new ArrayList<>();
-                        for(Label label: group.getLabels()) {
-                            labels.add(new LabelAdapter(label));
+                        List<LabelGroup> labelGroup = labelGroups.get(i);
+
+                        // DbImage <- DbLabel
+                        for (int j = 0; dbImageIds != null && j < dbImageIds.size(); j++) {
+                            long dbImageId = dbImageIds.get(j);
+
+                            List<Label> labels = labelGroup.get(j).getLabels();
+                            List<DbLabel> dbLabels = labels.stream()
+                                    .map(x -> new LabelAdapter(x))
+                                    .collect(Collectors.toList());
+
+                            mDb.imagesWithImageGroupDao()
+                                    .insertLabelsWithImageId(dbImageId, dbLabels);
                         }
-
-                        allLabelGroups.add(labels);
                     }
-
-                    mDb.imagesWithImageGroupDao()
-                       .insertImagesWithImageGroup(newDbImageGroup, newDbImages, allLabelGroups);
                 });
-            }).execute(groups);
+            }).execute(groups.stream().toArray(ImageGroup[]::new));
         }
     }
 
 
-    class ImageGroupAsyncTask extends AsyncTask<Image, Integer, List<ImageGroup>> {
-        public OnTaskFinishedListener listener;
+    /**
+     * 이미지 타임라인 그룹 생성 쓰레드
+     */
+    private class ImageGroupAsyncTask extends AsyncTask<Image, Integer, List<ImageGroup>> {
+        OnTaskFinishedListener listener;
 
-        public ImageGroupAsyncTask(OnTaskFinishedListener listener) {
+        private CountDownLatch latch;
+        ImageGroupAsyncTask(OnTaskFinishedListener listener) {
             super();
             this.listener = listener;
         }
@@ -361,26 +472,15 @@ public class TimeLineFragment extends Fragment {
 
         @Override
         public void onPostExecute(List<ImageGroup> groups) {
-//            Log.e("IMAGEGROUP_ASYNCTASK", "Group size: " + groups.size() + "");
-
             // 유사도 클러스터링
             int groupsCount = groups.size();
             latch = new CountDownLatch(groupsCount);
-
-            // 현재 남은 이미지 갯수 측정
-            int allImageCount = 0;
-            for (ImageGroup group: groups) {
-                allImageCount = group.getImages().size();
-            }
-            restImageCount -= allImageCount;
 
             for (ImageGroup group: groups) {
                 // 시간 그룹 내에서 유사도 클러스터링 실행
                 Image[] timeImages = new Image[group.getImages().size()];
 
-                new SimGroupAsyncTask(() -> {
-                    startNextImages(latch);
-                }).execute(group.getImages().toArray(timeImages));
+                new SimGroupAsyncTask(() -> startNextImages(latch)).execute(group.getImages().toArray(timeImages));
             }
 
             if (groups.size() <= 0) {
@@ -389,30 +489,22 @@ public class TimeLineFragment extends Fragment {
         }
 
         private void startNextImages(CountDownLatch latch) {
-            Log.e("ImageGroupAsyncTask", latch.getCount() + "");
             if (latch.getCount() > 0) {
                 latch.countDown();
             }
 
             if (latch.getCount() == 0) {
-                // 남은 사진 시간 클러스터링
-                if (restImageCount > 0) {
+                imageOrderIdx += 1;
 
-                    // 타겟 이미지 리스트 할당
-                    finish = start;
-                    start = finish.minusDays(IMAGE_TIME_RANGE);
-
-                    // 이미지 타겟팅
-                    List<Image> targetImages = new ArrayList<>(selectedImages);
-                    targetImages.removeIf((image) -> {
-                        LocalDateTime t = image.getCreationTime();
-                        return t.compareTo(start) <= 0 || t.compareTo(finish) > 0;
-                    });
-
-                    // 다음 시간 클러스터링 실행
-                    new ImageGroupAsyncTask(() -> {})
-                            .execute(targetImages.toArray(new Image[targetImages.size()]));
+                if (imageOrderIdx >= partedImages.size()) {
+                    return;
                 }
+
+                // 다음 시간 클러스터링 실행
+                Image[] nextImages = partedImages.get(imageOrderIdx).stream()
+                                                                    .toArray(Image[]::new);
+
+                new ImageGroupAsyncTask(() -> {}).execute(nextImages);
             }
         }
     }
@@ -423,8 +515,7 @@ public class TimeLineFragment extends Fragment {
      * Thread for Async MLKit DbImage Labeler
      * labeling 하고자 하는 이미지 -> label list
      */
-    private class AsyncLabelingTask extends AsyncTask<List<ImageGroup>, Integer, List<List<LabelGroup>>> {
-        List<LabelGroup> result = new ArrayList<>();
+    class AsyncLabelingTask extends AsyncTask<ImageGroup, Void, List<List<LabelGroup>>> {
         List<String> filenames = new ArrayList<>();
 
         private OnLabelTaskFinishedListener listener;
@@ -434,11 +525,14 @@ public class TimeLineFragment extends Fragment {
         }
 
         @Override
-        protected List<List<LabelGroup>> doInBackground(List<ImageGroup>... groups) {
+        protected List<List<LabelGroup>> doInBackground(ImageGroup... groups) {
             List<List<LabelGroup>> allLabelGroups = new ArrayList<>();
-            for (ImageGroup group: groups[0]) {
+            for (ImageGroup group: groups) {
                 List<Image> images = group.getImages();
-                List<LabelGroup> labelGroups = processImagesWithMlkit(images);
+                List<LabelGroup> labelGroups = images.stream()
+                        .map(x -> processImagesWithMlkit(x))
+                        .collect(Collectors.toList());
+
                 allLabelGroups.add(labelGroups);
             }
 
@@ -448,43 +542,42 @@ public class TimeLineFragment extends Fragment {
         @Override
         protected void onPostExecute(List<List<LabelGroup>> labels) {
             super.onPostExecute(labels);
-            Log.e("ImageFileLabeler", "" + labels.size());
 
             listener.onFinished(labels);
         }
 
-        private List<LabelGroup> processImagesWithMlkit(List<Image> imageFiles) {
-            final CountDownLatch latch = new CountDownLatch(imageFiles.size());
-            for (Image imageFile: imageFiles) {
-                File file = imageFile.getFile();
+        LabelGroup resultLabelGroup;
+        private LabelGroup processImagesWithMlkit(Image imageFile) {
+            final CountDownLatch latch = new CountDownLatch(1);
+            File file = imageFile.getFile();
 
-                ImageFileLabeler imageFileLabeler = new ImageFileLabeler(file, new ImageFileLabeler.ImageFileLabelerListener() {
-                    @Override
-                    public void onSuccess(File file, List<Label> labels) {
-                        LabelGroup labelGroup = new LabelGroup(labels);
-                        result.add(labelGroup);
-                        filenames.add(file.getName());
+            ImageFileLabeler imageFileLabeler = new ImageFileLabeler(file, new ImageFileLabeler.ImageFileLabelerListener() {
+                @Override
+                public void onSuccess(File file, List<Label> labels) {
+                    resultLabelGroup = new LabelGroup(labels);
+                    filenames.add(file.getName());
 
-                        latch.countDown();
-                    }
+                    latch.countDown();
+                }
 
-                    @Override
-                    public void onFailure(File file) {
-                        Log.e("ImageFileLabeler", file.getName());
-                        latch.countDown();
-                    }
-                });
+                @Override
+                public void onFailure(File file) {
+                    Log.e("ImageFileLabeler", file.getName());
+                    latch.countDown();
+                }
+            });
 
-                imageFileLabeler.process();
-            }
+            imageFileLabeler.process();
 
             try {
-                latch.await(5, TimeUnit.SECONDS);
+                // labeler가 종료되면 return 할 수 있도록
+                latch.await();
             } catch (InterruptedException e) {
-                Log.e("MLKIT_ASYNC_TASK", e.toString());
+                e.printStackTrace();
+                Log.e("MLKIT_ASYNC_TASK", e.getMessage());
             }
 
-            return result;
+            return resultLabelGroup;
         }
 
     }
