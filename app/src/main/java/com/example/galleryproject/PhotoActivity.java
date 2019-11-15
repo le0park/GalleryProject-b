@@ -30,7 +30,7 @@ public class PhotoActivity extends AppCompatActivity {
         actionBar.hide();
 
         Intent intent = getIntent(); /*데이터 수신*/
-        String filePath = intent.getExtras().getString("filePath");
+        File file = intent.getExtras().getParcelable("file");
 
         photo_backButton = (ImageButton) findViewById(R.id.photo_backButton);
         photo_backButton.setOnClickListener((view) -> {
@@ -42,7 +42,7 @@ public class PhotoActivity extends AppCompatActivity {
 //        Bitmap bitmap = BitmapFactory.decodeFile(new File(filePath).getAbsolutePath());
 //        photo_imageView.setImageBitmap(bitmap);
         Glide.with(this.getApplicationContext())
-                .load(new File(filePath))
+                .load(file)
                 .into(photo_imageView);
     }
 }

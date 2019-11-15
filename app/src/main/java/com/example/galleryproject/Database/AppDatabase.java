@@ -26,7 +26,8 @@ import com.example.galleryproject.Database.Entity.DbRepImage;
                 DbLabel.class,
                 DbImageGroup.class,
                 DbRepImage.class,
-                DbImageCollection.class
+                DbImageCollection.class,
+                DbInputData.class
             },
           version = 1,
           exportSchema = false)
@@ -36,6 +37,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract DbImageDao dbImageDao();
     public abstract DbImageGroupDao dbImageGroupDao();
     public abstract DbImageCollectionDao dbImageCollectionDao();
+    public abstract DbMlkitLabelDao dbMlkitLabelDao();
+    public abstract DbInputDataDao dbInputDataDao();
 
     private static volatile AppDatabase sInstance;
 

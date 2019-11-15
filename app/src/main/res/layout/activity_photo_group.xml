@@ -29,13 +29,6 @@
             android:text="2018-09-10"
             android:textSize="30dp"/>
 
-        <Button
-            android:id="@+id/saveButton"
-            android:text="저장"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="gone"/>
-
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
@@ -43,28 +36,28 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="3"
-        android:background="#F2F2F2"/>
+        android:background="#F2F2F2">
 
-    <TextView
-        android:id="@+id/photoGroup_Memo_textView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="2"
-        android:background="#ECE0AC"
-        android:layout_margin="10dp"
-        android:gravity="left|top"
-        android:padding="10dp"
-        android:visibility="visible"/>
+    </androidx.recyclerview.widget.RecyclerView>
 
-    <EditText
-        android:id="@+id/photoGroup_Memo_editText"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="2"
-        android:background="#ECE0AC"
-        android:layout_margin="10dp"
-        android:gravity="left|top"
-        android:padding="10dp"
-        android:visibility="gone"/>
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/saveButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="선택초기화"
+            android:visibility="visible" />
+
+        <Button
+            android:id="@+id/saveButton2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="데이터저장"
+            android:visibility="visible" />
+    </LinearLayout>
 
 </LinearLayout>

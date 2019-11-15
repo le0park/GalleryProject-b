@@ -18,23 +18,39 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.example.galleryproject.Database.AppDatabase;
+import com.example.galleryproject.Database.AppExecutors;
+import com.example.galleryproject.Database.Entity.DbInputData;
+import com.example.galleryproject.Database.Entity.DbLabel;
+import com.example.galleryproject.Model.Adapter.DbLabelAdapter;
+import com.example.galleryproject.Model.Category;
 import com.example.galleryproject.Model.Image;
 import com.example.galleryproject.Model.ImageCollection;
+import com.example.galleryproject.Model.ImageGroupLabelAnalyzer;
+import com.example.galleryproject.Model.Label;
+import com.example.galleryproject.Model.LabelCounter;
+import com.example.galleryproject.Model.LabelGroup;
+import com.example.galleryproject.Model.LabelGroupWithImage;
 import com.example.galleryproject.ui.all.AllRecyclerViewDecoration;
 import com.example.galleryproject.Model.ImageGroup;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class PhotoGroupActivity extends AppCompatActivity {
     private TextView photoGroup_date_textView;
     private TextView photoGroup_Memo_textView;
     private EditText photoGroup_Memo_editText;
-    private Button saveButton;
+    private Button resetButton;
+    private Button dbSaveButton;
     private ImageButton photoGroup_backButton;
 
     private InputMethodManager imm;
@@ -46,7 +62,13 @@ public class PhotoGroupActivity extends AppCompatActivity {
     private List<ImageGroup> imageGroups;
     private List<Boolean> selected;
 
+    private AppDatabase mDb;
+    private ImageGroupLabelAnalyzer labelAnalyzer = new ImageGroupLabelAnalyzer();
+    private List<LabelGroupWithImage> labelGroupsWithImage;
+    private List<Map<Integer, double[]>> categoryMaps;
 
+    private List<double[]> selectedInput = new ArrayList<>();
+    private List<double[]> deselectedInput = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,33 +98,21 @@ public class PhotoGroupActivity extends AppCompatActivity {
 
 
         imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-        saveButton = findViewById(R.id.saveButton);
+        resetButton = findViewById(R.id.saveButton);
+        dbSaveButton = findViewById(R.id.saveButton2);
         photoGroup_backButton = findViewById(R.id.photoGroup_backButton);
         photoGroup_date_textView = findViewById(R.id.photoGroup_date_textView);
-        photoGroup_Memo_editText = findViewById(R.id.photoGroup_Memo_editText);
-        photoGroup_Memo_textView = findViewById(R.id.photoGroup_Memo_textView);
 
         photoGroup_date_textView.setText(imageCollection.getDate().toString());
-        photoGroup_Memo_textView.setText(imageCollection.getMemo());
 
-        photoGroup_Memo_textView.setOnClickListener((view) -> {
-            photoGroup_Memo_textView.setVisibility(View.GONE);
-            photoGroup_Memo_editText.setVisibility(View.VISIBLE);
-            photoGroup_Memo_editText.setText(photoGroup_Memo_textView.getText());
-            photoGroup_Memo_editText.setSelection(photoGroup_Memo_textView.getText().length());
-            photoGroup_Memo_editText.requestFocus();
-            imm.showSoftInput(photoGroup_Memo_editText,0);
-            saveButton.setVisibility(View.VISIBLE);
+        resetButton.setOnClickListener((view) -> {
+            resetRepresentImage();
         });
 
-        saveButton.setOnClickListener((view) -> {
-            photoGroup_Memo_editText.setVisibility(View.GONE);
-            photoGroup_Memo_textView.setVisibility(View.VISIBLE);
-            photoGroup_Memo_textView.setText(photoGroup_Memo_editText.getText());
-            photoGroup_Memo_editText.clearFocus();
-            imm.hideSoftInputFromWindow(photoGroup_Memo_editText.getWindowToken(), 0);
-            saveButton.setVisibility(View.GONE);
-            //TODO 수정한 메모 저장
+        dbSaveButton.setOnClickListener((view) -> {
+            AppExecutors.getInstance().diskIO().execute(() -> {
+                saveInput();
+            });
         });
 
         photoGroup_backButton.setOnClickListener((view) -> finish());
@@ -115,39 +125,141 @@ public class PhotoGroupActivity extends AppCompatActivity {
                                                     .map(x -> x.getImages().contains(image))
                                                     .collect(Collectors.toList());
 
-            StringBuilder msg1 = new StringBuilder();
-            for (Boolean b: nowSelected) {
-                msg1.append(b)
-                    .append(", ");
+            if (categoryMaps == null) {
+                Toast.makeText(getApplicationContext(), "데이터가 생성되지 않았습니다! 잠시만 기다려주세요. ", Toast.LENGTH_SHORT)
+                     .show();
+
+                return;
             }
 
-            Log.e("PhotoGroupActivity", nowSelected.size() + "");
-            Log.e("PhotoGroupActivity", msg1.toString());
 
-            StringBuilder msg2 = new StringBuilder();
-            for (Boolean b: selected) {
-                msg2.append(b)
-                    .append(", ");
-            }
+            LabelGroup clickedLabelGroup =
+                labelGroupsWithImage.stream()
+                                    .filter(x -> x.isOfImage(image))
+                                    .collect(Collectors.toList()).get(0)
+                                    .getLabelGroup();
 
-            Log.e("PhotoGroupActivity", selected.size() + "");
-            Log.e("PhotoGroupActivity", msg2.toString());
+            int gIdx = 0;
+            for (; gIdx < imageGroups.size(); gIdx++) {
+                List<Image> gImages = imageGroups.get(gIdx).getImages();
 
-            for (int i = 0; i < nowSelected.size(); i++) {
-                if (nowSelected.get(i)) {
-                    boolean current = selected.get(i);
-                    selected.set(i, !current);
-
-                    String currentMemo = imageCollection.getMemo();
-                    imageCollection.setMemo(currentMemo + "\n/// " + i);
-                    photoGroup_Memo_textView.setText(imageCollection.getMemo());
+                if (gImages.contains(image)) {
+                    break;
                 }
             }
 
+            Integer category = LabelCounter.getCategory(clickedLabelGroup.getLabels());
+            double[] input = categoryMaps.get(gIdx).get(category);
+
+            selectRepresentImage(input);
+
+            Toast.makeText(getApplicationContext(),"선택되었습니다. ",Toast.LENGTH_SHORT)
+                 .show();
         });
 
         photoGroup_RecyclerView.setAdapter(adapter);
         photoGroup_RecyclerView.addItemDecoration(new AllRecyclerViewDecoration(10));
+
+        mDb = AppDatabase.getInstance(getApplicationContext());
+        AppExecutors.getInstance().diskIO().execute(() -> {
+            this.labelGroupsWithImage = new ArrayList<>();
+
+            List<List<LabelGroup>> labelGroups = new ArrayList<>();
+
+            AppExecutors.getInstance().mainThread().execute(() -> {
+                Toast.makeText(
+                        getApplicationContext(),
+                        String.format("Group size: %d", imageCollection.getGroups().size()),
+                        Toast.LENGTH_LONG)
+                     .show();
+            });
+
+            for (ImageGroup group: imageCollection.getGroups()) {
+                List<LabelGroup> imageLabels = new ArrayList<>();
+
+                List<Image> similarImages = group.getImages();
+                for (Image im: similarImages) {
+                    int id = (int) mDb.dbImageDao()
+                                      .getId(im.getFile());
+
+                    List<DbLabel> dbLabels = mDb.dbMlkitLabelDao().loadAllByImageId(id);
+                    List<Label> labels = dbLabels.stream()
+                                                 .map(x -> new DbLabelAdapter(x))
+                                                 .collect(Collectors.toList());
+
+                    LabelGroup labelGroup = new LabelGroup(labels);
+                    imageLabels.add(labelGroup);
+
+                    labelGroupsWithImage.add(new LabelGroupWithImage(labelGroup, im));
+                }
+
+                labelGroups.add(imageLabels);
+            }
+
+
+
+            labelAnalyzer.setLabelGroups(labelGroups);
+            labelAnalyzer.setGroups(imageCollection.getGroups());
+            labelAnalyzer.analyze();
+
+            categoryMaps = labelAnalyzer.getInputs();
+            deselectedInput.addAll(categoryMaps.stream()
+                                            .map(x -> x.entrySet())
+                                            .flatMap(Set::stream)
+                                            .map(Map.Entry::getValue)
+                                            .collect(Collectors.toList()));
+        });
+    }
+
+    public void selectRepresentImage(double[] input) {
+        if (deselectedInput.indexOf(input) >= 0) {
+            selectedInput.add(input);
+            deselectedInput.remove(input);
+        }
+    }
+
+    public void resetRepresentImage() {
+        selectedInput = new ArrayList<>();
+        deselectedInput = new ArrayList<>();
+        deselectedInput.addAll(categoryMaps.stream()
+                .map(x -> x.entrySet())
+                .flatMap(Set::stream)
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toList()));
+    }
+
+    public void saveInput() {
+        List<DbInputData> selected = new ArrayList<>();
+
+        selected.addAll(selectedInput.stream()
+                                    .map(in -> {
+                                        DbInputData data = new DbInputData();
+                                        data.setJson(String.format("[%f, %f, %f, %f]", in[0], in[1], in[2], in[3]));
+                                        data.setSelected(1);
+
+                                        return data;
+                                    })
+                                    .collect(Collectors.toList()));
+
+        List<DbInputData> deselected = new ArrayList<>();
+        deselected.addAll(deselectedInput.stream()
+                                        .map(in -> {
+                                            DbInputData data = new DbInputData();
+                                            data.setJson(String.format("[%f, %f, %f, %f]", in[0], in[1], in[2], in[3]));
+                                            data.setSelected(0);
+
+                                            return data;
+                                        })
+                                        .collect(Collectors.toList()));
+
+        mDb.dbInputDataDao().insertAll(selected.stream().toArray(DbInputData[]::new));
+        mDb.dbInputDataDao().insertAll(deselected.stream().toArray(DbInputData[]::new));
+
+
+        AppExecutors.getInstance().mainThread().execute(() -> {
+            Toast.makeText(getApplicationContext(), "데이터가 저장되었습니다. \n뒤로가셔서 공유하기를 눌러주세요! ", Toast.LENGTH_LONG)
+                .show();
+        });
     }
 
     class Adapter extends RecyclerView.Adapter<Adapter.ViewHolder>{
@@ -157,8 +269,6 @@ public class PhotoGroupActivity extends AppCompatActivity {
         Adapter(List<Image> images, OnItemClickListener listener){
             this.images = images;
             this.listener = listener;
-//            for(String filepath : filePaths)
-//                Log.e("Adapter : ", filepath);
         }
 
         class ViewHolder extends RecyclerView.ViewHolder {
@@ -180,7 +290,6 @@ public class PhotoGroupActivity extends AppCompatActivity {
         public Adapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             Context context = parent.getContext();
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
 
             View view = inflater.inflate(R.layout.photogroup_item, parent, false);
 

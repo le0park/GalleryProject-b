@@ -1,13 +1,16 @@
 package com.example.galleryproject.ui.timeLine;
 
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.JsonReader;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -22,6 +25,7 @@ import com.example.galleryproject.Database.AppExecutors;
 import com.example.galleryproject.Database.Entity.DbImage;
 import com.example.galleryproject.Database.Entity.DbImageCollection;
 import com.example.galleryproject.Database.Entity.DbImageGroup;
+import com.example.galleryproject.Database.Entity.DbInputData;
 import com.example.galleryproject.Database.Entity.DbLabel;
 import com.example.galleryproject.Model.Adapter.DbImageAdapter;
 import com.example.galleryproject.Model.Adapter.DbImageCollectionAdapter;
@@ -47,6 +51,11 @@ import com.example.galleryproject.TopCalendarLayout;
 import com.example.galleryproject.Util.ImageFileLabeler;
 import com.example.galleryproject.ui.survey.SurveyDialogFragment;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONStringer;
+
 import java.io.File;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -54,6 +63,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -75,6 +85,7 @@ public class TimeLineFragment extends Fragment {
     private TimeLineViewModel timeLineViewModel;
     private TimeLineRecyclerView timeLineRecyclerView;
     private TimeLineRecyclerViewAdapter adapter;
+    private Button shareButton;
 
     private TopCalendarLayout topCalendar;
     private BottomCalendarLayout bottomCalendar;
@@ -126,6 +137,46 @@ public class TimeLineFragment extends Fragment {
             topCalendar.setMonthTextView(month);
         });
 
+        shareButton = root.findViewById(R.id.shareButton);
+        shareButton.setOnClickListener((view) -> {
+            AppExecutors.getInstance().diskIO().execute(() -> {
+                List<DbInputData> inputDataList = mDb.dbInputDataDao().getAll();
+
+                JSONArray ja = new JSONArray();
+                for (DbInputData inputData: inputDataList) {
+                    JSONObject jo = new JSONObject();
+                    try {
+                        jo.put("in", inputData.getJson());
+                        jo.put("test", inputData.isSelected());
+
+                        ja.put(jo);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        Log.e("JSON", e.getMessage());
+                    }
+
+                }
+
+                try {
+                    final String message = ja.toString(2);
+
+                    AppExecutors.getInstance().mainThread().execute(() -> {
+                        Intent sendIntent = new Intent();
+                        sendIntent.setAction(Intent.ACTION_SEND);
+                        sendIntent.putExtra(Intent.EXTRA_TEXT, message);
+                        sendIntent.setType("text/plain");
+
+                        Intent shareIntent = Intent.createChooser(sendIntent, null);
+                        startActivity(shareIntent);
+                    });
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Log.e("JSON", e.getMessage());
+                }
+
+            });
+        });
+
 
 
 
@@ -143,7 +194,8 @@ public class TimeLineFragment extends Fragment {
                 List<ImageGroup> imageGroups = new ArrayList<>();
                 for (DbImageGroup group: dbImageGroups) {
                     List<DbImage> dbImages = mDb.dbImageDao().loadWithGroupId(group.id);
-                    List<Image> newImages = dbImages.stream()
+                    List<Image> newImages = dbImages
+                            .stream()
                             .map(x -> new DbImageAdapter(x))
                             .collect(Collectors.toList());
 
@@ -153,11 +205,11 @@ public class TimeLineFragment extends Fragment {
                 collections.add(new DbImageCollectionAdapter(dbCollection, imageGroups));
             }
 
+            mDb.dbInputDataDao().reset();
+
             AppExecutors.getInstance().mainThread().execute(()->{
                 timeLineViewModel.insertAll(collections);
             });
-
-
 
 
             // 이미지 파일 목록 추출
@@ -324,7 +376,7 @@ public class TimeLineFragment extends Fragment {
 
         @Override
         public void onPostExecute(List<ImageGroup> groups) {
-            Toast.makeText(getContext(), groups.size() + "개로 유사도 그룹 완료.", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(getContext(), groups.size() + "개로 유사도 그룹 완료.", Toast.LENGTH_SHORT).show();
 
 //            List<Image> resultImages = new ArrayList<>();
 //            for (ImageGroup group: groups){
@@ -341,9 +393,6 @@ public class TimeLineFragment extends Fragment {
                 analyzer.setLabelGroups(labelGroups);
                 analyzer.analyze();
 
-                Log.e("LABEL_ANALYZER", "size: " + groups.size());
-                Log.e("LABEL_ANALYZER", analyzer.toString());
-
                 listener.onFinished();
 
                 result.setMemo(analyzer.toString());
@@ -353,14 +402,16 @@ public class TimeLineFragment extends Fragment {
                     // doSomething();
                     DbImageCollection newDbImageCollection = new ImageCollectionAdapter(result);
 
-                    List<DbImageGroup> newDbImageGroups = result.getGroups().stream()
-                                                                            .map(x -> new ImageGroupAdapter(x))
-                                                                            .collect(Collectors.toList());
+                    List<DbImageGroup> newDbImageGroups = result.getGroups()
+                                                                .stream()
+                                                                .map(x -> new ImageGroupAdapter(x))
+                                                                .collect(Collectors.toList());
 
                     List<Long> dbImageGroupIds =
                             mDb.dbImageCollectionDao().insertWithGroups(newDbImageCollection, newDbImageGroups);
 
-                    List<List<Image>> newGroupOfImages = result.getGroups().stream()
+                    List<List<Image>> newGroupOfImages = result.getGroups()
+                                                              .stream()
                                                               .map(ImageGroup::getImages)
                                                               .collect(Collectors.toList());
 
@@ -369,28 +420,29 @@ public class TimeLineFragment extends Fragment {
                     for (int i = 0; i < dbImageGroupIds.size(); i++) {
                         Long groupId = dbImageGroupIds.get(i);
                         List<DbImage> newDbImages =
-                                newGroupOfImages.get(i).stream()
-                                                    .map(x -> new ImageAdapter(x))
-                                                    .collect(Collectors.toList());
+                                newGroupOfImages.get(i)
+                                                .stream()
+                                                .map(x -> new ImageAdapter(x))
+                                                .collect(Collectors.toList());
 
 
                         dbImageIds = mDb.imagesWithImageGroupDao()
                                 .insertImagesWithImageGroupId(groupId, newDbImages);
+
+                        List<LabelGroup> labelGroup = labelGroups.get(i);
+
+
+                        for (int j = 0; dbImageIds != null && j < dbImageIds.size(); j++) {
+                            long dbImageId = dbImageIds.get(j);
+                            List<Label> labels = labelGroup.get(j).getLabels();
+                            List<DbLabel> dbLabels = labels.stream()
+                                    .map(x -> new LabelAdapter(x))
+                                    .collect(Collectors.toList());
+
+                            mDb.imagesWithImageGroupDao().insertLabelsWithImageId(dbImageId, dbLabels);
+                        }
                     }
 
-                    List<LabelGroup> flatLabelGroups = labelGroups.stream()
-                                                                  .flatMap(List::stream)
-                                                                  .collect(Collectors.toList());
-
-                    for (int i = 0; dbImageIds != null && i < dbImageIds.size(); i++) {
-                        long dbImageId = dbImageIds.get(i);
-                        List<Label> labels = flatLabelGroups.get(i).getLabels();
-                        List<DbLabel> dbLabels = labels.stream()
-                                                        .map(x -> new LabelAdapter(x))
-                                                        .collect(Collectors.toList());
-
-                        mDb.imagesWithImageGroupDao().insertLabelsWithImageId(dbImageId, dbLabels);
-                    }
                 });
             }).execute(groups);
         }
@@ -413,8 +465,6 @@ public class TimeLineFragment extends Fragment {
             TimeGroupAlgorithm algorithm = new TimeGroupAlgorithm();
             List<ImageGroup> processedGroups = algorithm.processImages(inputImages);
 
-            publishProgress(processedGroups.size());
-
             return processedGroups;
         }
 
@@ -435,11 +485,9 @@ public class TimeLineFragment extends Fragment {
 
             for (ImageGroup group: groups) {
                 // 시간 그룹 내에서 유사도 클러스터링 실행
-                Image[] timeImages = new Image[group.getImages().size()];
-
                 new SimGroupAsyncTask(() -> {
                     startNextImages(latch);
-                }).execute(group.getImages().toArray(timeImages));
+                }).execute(group.getImages().stream().toArray(Image[]::new));
             }
 
             if (groups.size() <= 0) {
@@ -448,7 +496,7 @@ public class TimeLineFragment extends Fragment {
         }
 
         private void startNextImages(CountDownLatch latch) {
-            Log.e("ImageGroupAsyncTask", latch.getCount() + "");
+
             if (latch.getCount() > 0) {
                 latch.countDown();
             }
@@ -483,7 +531,7 @@ public class TimeLineFragment extends Fragment {
      * labeling 하고자 하는 이미지 -> label list
      */
     private class AsyncLabelingTask extends AsyncTask<List<ImageGroup>, Void, List<List<LabelGroup>>> {
-        List<LabelGroup> result = new ArrayList<>();
+        LabelGroup tmpLabelGroup;
         List<String> filenames = new ArrayList<>();
 
         private OnLabelTaskFinishedListener listener;
@@ -497,7 +545,10 @@ public class TimeLineFragment extends Fragment {
             List<List<LabelGroup>> allLabelGroups = new ArrayList<>();
             for (ImageGroup group: groups[0]) {
                 List<Image> images = group.getImages();
-                List<LabelGroup> labelGroups = processImagesWithMlkit(images);
+                List<LabelGroup> labelGroups = images.stream()
+                                                    .map(x -> processImagesWithMlkit(x))
+                                                    .collect(Collectors.toList());
+
                 allLabelGroups.add(labelGroups);
             }
 
@@ -507,43 +558,39 @@ public class TimeLineFragment extends Fragment {
         @Override
         protected void onPostExecute(List<List<LabelGroup>> labels) {
             super.onPostExecute(labels);
-            Log.e("ImageFileLabeler", "" + labels.size());
 
             listener.onFinished(labels);
         }
 
-        private List<LabelGroup> processImagesWithMlkit(List<Image> imageFiles) {
-            final CountDownLatch latch = new CountDownLatch(imageFiles.size());
-            for (Image imageFile: imageFiles) {
-                File file = imageFile.getFile();
+        private LabelGroup processImagesWithMlkit(Image imageFile) {
+            final CountDownLatch latch = new CountDownLatch(1);
+            File file = imageFile.getFile();
 
-                ImageFileLabeler imageFileLabeler = new ImageFileLabeler(file, new ImageFileLabeler.ImageFileLabelerListener() {
-                    @Override
-                    public void onSuccess(File file, List<Label> labels) {
-                        LabelGroup labelGroup = new LabelGroup(labels);
-                        result.add(labelGroup);
-                        filenames.add(file.getName());
+            ImageFileLabeler imageFileLabeler = new ImageFileLabeler(file, new ImageFileLabeler.ImageFileLabelerListener() {
+                @Override
+                public void onSuccess(File file, List<Label> labels) {
+                    tmpLabelGroup = new LabelGroup(labels);
+                    filenames.add(file.getName());
 
-                        latch.countDown();
-                    }
+                    latch.countDown();
+                }
 
-                    @Override
-                    public void onFailure(File file) {
-                        Log.e("ImageFileLabeler", file.getName());
-                        latch.countDown();
-                    }
-                });
+                @Override
+                public void onFailure(File file) {
+                    Log.e("ImageFileLabeler", file.getName());
+                    latch.countDown();
+                }
+            });
 
-                imageFileLabeler.process();
-            }
+            imageFileLabeler.process();
 
             try {
-                latch.await(5, TimeUnit.SECONDS);
+                latch.await();
             } catch (InterruptedException e) {
                 Log.e("MLKIT_ASYNC_TASK", e.toString());
             }
 
-            return result;
+            return tmpLabelGroup;
         }
 
     }

@@ -11,7 +11,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginBottom="8dp" >
+
+    </com.example.galleryproject.TopCalendarLayout>
+
+    <Button
+        android:id="@+id/shareButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="데이터 공유하기" />
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -33,7 +41,9 @@
             android:id="@+id/bottomCalendar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="top" />
+            android:layout_gravity="top" >
+
+        </com.example.galleryproject.BottomCalendarLayout>
 
     </FrameLayout>
 
