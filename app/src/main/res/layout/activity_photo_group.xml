@@ -2,39 +2,56 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#FFFAFAFA">
+    android:background="#FFFAFAFA"
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:orientation="horizontal"
-        android:background="#FFFAFAFA">
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
 
-        <ImageButton
-            android:id="@+id/photoGroup_backButton"
-            android:layout_width="30dp"
-            android:layout_height="match_parent"
-            android:src="@drawable/calendar_left_icon"
-            android:scaleType="fitXY"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_weight="10"
             android:background="#FFFAFAFA"
-            />
+            android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/photoGroup_date_textView"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:background="#FFFAFAFA"
-            android:text="2018-09-10"
-            android:textSize="30dp"/>
+            <ImageButton
+                android:id="@+id/photoGroup_backButton"
+                android:layout_width="30dp"
+                android:layout_height="40dp"
+                android:layout_gravity="center_vertical"
+                android:background="#FFFAFAFA"
+                android:scaleType="fitXY"
+                android:src="@drawable/calendar_left_icon" />
 
-        <Button
-            android:id="@+id/saveButton"
-            android:text="저장"
-            android:layout_width="wrap_content"
+            <TextView
+                android:id="@+id/photoGroup_date_textView"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:background="#FFFAFAFA"
+                android:text="2018-09-10"
+                android:textSize="30dp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="50dp"
             android:layout_height="wrap_content"
-            android:visibility="gone"/>
+            android:layout_gravity="right|center_vertical"
+            android:layout_weight="1">
+
+            <ImageButton
+                android:id="@+id/saveButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="#FFFAFAFA"
+                android:src="@drawable/save_button"
+                android:text="저장"
+                android:visibility="gone" />
+        </LinearLayout>
 
     </LinearLayout>
 
@@ -43,28 +60,28 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="3"
-        android:background="#F2F2F2"/>
+        android:background="#F2F2F2" />
 
     <TextView
         android:id="@+id/photoGroup_Memo_textView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_margin="10dp"
         android:layout_weight="2"
         android:background="#ECE0AC"
-        android:layout_margin="10dp"
         android:gravity="left|top"
         android:padding="10dp"
-        android:visibility="visible"/>
+        android:visibility="visible" />
 
     <EditText
         android:id="@+id/photoGroup_Memo_editText"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_margin="10dp"
         android:layout_weight="2"
         android:background="#ECE0AC"
-        android:layout_margin="10dp"
         android:gravity="left|top"
         android:padding="10dp"
-        android:visibility="gone"/>
+        android:visibility="gone" />
 
 </LinearLayout>

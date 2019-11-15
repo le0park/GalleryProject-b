@@ -30,6 +30,9 @@ android {
             ]
         }
     }
+    aaptOptions {
+        noCompress "tflite"
+    }
 }
 
 dependencies {
@@ -84,5 +87,10 @@ dependencies {
      * Android Debug Database
      */
     debugImplementation 'com.amitshekhar.android:debug-db:1.0.6'
+
+    /**
+     * TensorFlowLite
+     */
+    implementation 'org.tensorflow:tensorflow-lite:+'
 }
 apply plugin: 'com.google.gms.google-services'

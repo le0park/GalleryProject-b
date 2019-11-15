@@ -23,13 +23,14 @@ import com.example.galleryproject.ui.all.AllRecyclerViewDecoration;
 import com.example.galleryproject.Model.ImageGroup;
 
 import java.io.File;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class PhotoGroupActivity extends AppCompatActivity {
     private TextView photoGroup_date_textView;
     private TextView photoGroup_Memo_textView;
     private EditText photoGroup_Memo_editText;
-    private Button saveButton;
+    private ImageButton saveButton;
     private ImageButton photoGroup_backButton;
 
     private InputMethodManager imm;
@@ -55,7 +56,7 @@ public class PhotoGroupActivity extends AppCompatActivity {
         photoGroup_Memo_editText = findViewById(R.id.photoGroup_Memo_editText);
         photoGroup_Memo_textView = findViewById(R.id.photoGroup_Memo_textView);
 
-        photoGroup_date_textView.setText(imageGroup.getDate().toString());
+        photoGroup_date_textView.setText(imageGroup.getDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
 
         photoGroup_Memo_textView.setText(imageGroup.getMemo());
         photoGroup_Memo_textView.setOnClickListener(new View.OnClickListener() {
