@@ -7,6 +7,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -29,7 +30,7 @@ class SurveyAdapter extends RecyclerView.Adapter<SurveyAdapter.ViewHolder>
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         public TextView survey_item_textView;
-        public Button survey_item_button;
+        public ImageButton survey_item_button;
         View rowView;
         ViewHolder(View itemView) {
             super(itemView) ;
