@@ -6,7 +6,7 @@ import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Transaction;
 
-import com.example.galleryproject.Database.Entity.DbLabel;
+import com.example.galleryproject.Database.Entity.DbImage;
 import com.example.galleryproject.Database.Entity.DbRepImage;
 
 import java.util.List;
@@ -23,6 +23,11 @@ public abstract class DbRepImageDao {
     @Query("SELECT * FROM rep_image WHERE id IN (:ids)")
     public abstract List<DbRepImage> loadAllByIds(int[] ids);
 
+    @Query("SELECT * FROM image INNER JOIN rep_image " +
+            "ON image.id = rep_image.image_id " +
+            "WHERE rep_image.collection_id = :collectionId")
+    public abstract List<DbImage> getRepImageForCollection(final int collectionId);
+
 
     /**
      * RepImage (ImageCollection - Image) 관계 호출
@@ -30,7 +35,7 @@ public abstract class DbRepImageDao {
      * @return
      */
     @Query("SELECT * FROM rep_image WHERE collection_id = (:collectionId)")
-    public abstract List<DbRepImage> loadAllByImageGroupId(int collectionId);
+    public abstract List<DbRepImage> loadAllByCollectionId(int collectionId);
 
     /**
      * RepImage 저장

@@ -57,10 +57,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import kotlin.Suppress;
 import xyz.sangcomz.stickytimelineview.RecyclerSectionItemDecoration;
 import xyz.sangcomz.stickytimelineview.TimeLineRecyclerView;
 import xyz.sangcomz.stickytimelineview.model.SectionInfo;
@@ -70,10 +68,6 @@ public class TimeLineFragment extends Fragment {
     public static final String EXTENSION_TYPE = ".jpg";
     private static final int IMAGE_TIME_RANGE = 7;
 
-    private LocalDateTime finish = LocalDateTime.now();
-    private LocalDateTime start = finish.minusDays(IMAGE_TIME_RANGE);
-    private int restImageCount = 0;
-
     private TimeLineViewModel timeLineViewModel;
     private TimeLineRecyclerView timeLineRecyclerView;
     private TimeLineRecyclerViewAdapter adapter;
@@ -81,7 +75,6 @@ public class TimeLineFragment extends Fragment {
     private TopCalendarLayout topCalendar;
     private BottomCalendarLayout bottomCalendar;
 
-    private List<ImageCollection> dataset;
     private List<File> targetFiles;
     private List<Image> selectedImages;
 
@@ -112,7 +105,7 @@ public class TimeLineFragment extends Fragment {
             adapter.notifyDataSetChanged();
         });
 
-        dataset = timeLineViewModel.getImageGroups().getValue();
+        List<ImageCollection> dataset = timeLineViewModel.getImageGroups().getValue();
         adapter = new TimeLineRecyclerViewAdapter(this.getContext(), dataset);
 
         timeLineRecyclerView.addItemDecoration(getSectionCallback((ArrayList) dataset));
@@ -166,7 +159,12 @@ public class TimeLineFragment extends Fragment {
                     imageGroups.add(new DbImageGroupAdapter(group, newImages));
                 }
 
-                collections.add(new DbImageCollectionAdapter(dbCollection, imageGroups));
+                List<DbImage> dbImages = mDb.dbRepImageDao().getRepImageForCollection(dbCollection.id);
+                List<Image> repImages = dbImages.stream()
+                                                .map(DbImageAdapter::new)
+                                                .collect(Collectors.toList());
+
+                collections.add(new DbImageCollectionAdapter(dbCollection, imageGroups, repImages));
             }
 
 
@@ -191,33 +189,35 @@ public class TimeLineFragment extends Fragment {
 
 
             imageOrderIdx = 0;
-            partedImages = splitImagesInDayRange(selectedImages, 7);
+            partedImages = splitImagesInDayRange(selectedImages, IMAGE_TIME_RANGE);
 
-            AppExecutors.getInstance().mainThread().execute(()->{
-                SurveyDialogFragment survey = SurveyDialogFragment.getInstance();
-                survey.show(getChildFragmentManager(), "Survey Dialog");
-                survey.setSurveyClickListener((ArrayList<String> categories) -> {
-                    for (String category: categories) {
-                        objectPriority.add(
-                                Category.getValue(category));
-                    }
+            AppExecutors.getInstance()
+                        .mainThread()
+                        .execute(() -> {
+                            SurveyDialogFragment survey = SurveyDialogFragment.getInstance();
+                            survey.show(getChildFragmentManager(), "Survey Dialog");
+                            survey.setSurveyClickListener((ArrayList<String> categories) -> {
+                                for (String category: categories) {
+                                    objectPriority.add(
+                                            Category.getValue(category));
+                                }
 
-                    objectPriority.add(Category.ETC);
+                                objectPriority.add(Category.ETC);
 
-                    int[] priority = objectPriority.stream()
-                            .mapToInt(Integer::intValue)
-                            .toArray();
+                                int[] priority = objectPriority.stream()
+                                        .mapToInt(Integer::intValue)
+                                        .toArray();
 
-                    ImageGroupLabelAnalyzer.setLabelPriority(priority);
+                                ImageGroupLabelAnalyzer.setLabelPriority(priority);
 
-                    if (partedImages.size() > 0) {
-                        Image[] images = partedImages.get(imageOrderIdx).stream()
-                                .toArray(Image[]::new);
+                                if (partedImages.size() > 0) {
+                                    Image[] images = partedImages.get(imageOrderIdx).stream()
+                                            .toArray(Image[]::new);
 
-                        new ImageGroupAsyncTask(() -> {}).execute(images);
-                    }
-                });
-            });
+                                    new ImageGroupAsyncTask(() -> {}).execute(images);
+                                }
+                            });
+                        });
         });
 
         return root;
@@ -398,9 +398,12 @@ public class TimeLineFragment extends Fragment {
 
         @Override
         public void onPostExecute(List<ImageGroup> groups) {
-            Toast.makeText(getActivity().getApplicationContext(), groups.size() + "개로 유사도 그룹 완료.", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(getActivity().getApplicationContext(), groups.size() + "개로 유사도 그룹 완료.", Toast.LENGTH_SHORT).show();
 
             ImageCollection result = new ImageCollection(groups);
+
+            ImageGroup[] inputGroups = new ImageGroup[groups.size()];
+            groups.toArray(inputGroups);
 
             // MLkit labeling thread
             new AsyncLabelingTask((labelGroups) -> {
@@ -408,6 +411,21 @@ public class TimeLineFragment extends Fragment {
                 analyzer.setGroups(groups);
                 analyzer.setLabelGroups(labelGroups);
                 analyzer.analyze();
+
+                /**
+                 * TODO: 대표이미지 뽑아서 result.setRepImages(...) 로 대표이미지 할당해야함.
+                 */
+                List<Image> images = result.getGroups().get(0).getImages();
+                List<Image> repImages = new ArrayList<>();
+                for (int i = 0; i < 3; i++) {
+                    if (i >= images.size()) {
+                        break;
+                    }
+
+                    repImages.add(images.get(i));
+                }
+                result.setRepImages(repImages);
+
 
                 timeLineViewModel.insert(result);
                 listener.onFinished();
@@ -429,11 +447,13 @@ public class TimeLineFragment extends Fragment {
                                .insertWithGroups((int) collectionId, newDbImageGroups);
 
                     List<List<Image>> newGroupOfImages = result.getGroups().stream()
-                                                              .map(ImageGroup::getImages)
-                                                              .collect(Collectors.toList());
+                                                               .map(ImageGroup::getImages)
+                                                               .collect(Collectors.toList());
+
+                    List<Long> imageIdsForRepImage = new ArrayList<>();
 
                     // DbGroup <- DbImage
-                    List<Long> dbImageIds = null;
+                    List<Long> dbImageIds;
                     for (int i = 0; i < dbImageGroupIds.size(); i++) {
                         Long groupId = dbImageGroupIds.get(i);
 
@@ -442,8 +462,21 @@ public class TimeLineFragment extends Fragment {
                                                                .map(ImageAdapter::new)
                                                                .collect(Collectors.toList());
 
+                        for(DbImage image: newDbImages) {
+                            long dbImageId = mDb.imagesWithImageGroupDao()
+                                                .insertImageWithGroupId(groupId, image);
+
+                            // 대표사진 imageId 값 저장
+                            for (Image rim: repImages) {
+                                if (rim.equals(image.path)) {
+                                    imageIdsForRepImage.add(dbImageId);
+                                }
+                            }
+                        }
+
                         dbImageIds = mDb.imagesWithImageGroupDao()
                                         .insertImagesWithImageGroupId(groupId, newDbImages);
+
 
                         List<LabelGroup> labelGroup = labelGroups.get(i);
 
@@ -461,19 +494,14 @@ public class TimeLineFragment extends Fragment {
                         }
                     }
 
-                    for (int i = 0; i < 3; i++) {
-                        if (i >= dbImageIds.size()) {
-                            break;
-                        }
-
-                        long imageId = dbImageIds.get(i);
+                    for (long imageId: imageIdsForRepImage) {
                         DbRepImage repImage = new DbRepImage();
 
                         mDb.dbRepImageDao()
                            .insertWithCollectionAndImage(repImage, (int) collectionId, (int) imageId);
                     }
                 });
-            }).execute(groups.stream().toArray(ImageGroup[]::new));
+            }).execute(inputGroups);
         }
     }
 
@@ -534,8 +562,10 @@ public class TimeLineFragment extends Fragment {
                 }
 
                 // 다음 시간 클러스터링 실행
-                Image[] nextImages = partedImages.get(imageOrderIdx).stream()
-                                                                    .toArray(Image[]::new);
+                int nextImagesCount = partedImages.get(imageOrderIdx).size();
+
+                Image[] nextImages = new Image[nextImagesCount];
+                partedImages.get(imageOrderIdx).toArray(nextImages);
 
                 new ImageGroupAsyncTask(() -> {}).execute(nextImages);
             }

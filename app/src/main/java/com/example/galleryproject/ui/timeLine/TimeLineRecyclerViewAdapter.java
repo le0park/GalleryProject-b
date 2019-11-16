@@ -51,14 +51,7 @@ public class TimeLineRecyclerViewAdapter extends TimeLineRecyclerView.Adapter<Ti
     public void onBindViewHolder(@NonNull TimeLineRecyclerViewHolder holder, int position) {
         ImageCollection collection = imageCollections.get(position);
 
-        List<ImageGroup> imageGroups = collection.getGroups();
-
-        List<Image> images = imageGroups.stream()
-                                        .map(x -> x.getImages())
-                                        .flatMap(x -> x.stream())
-                                        .collect(Collectors.toList());
-
-
+        List<Image> images = collection.getRepImages();
         TimeLineHorizontalAdapter adapter = new TimeLineHorizontalAdapter(context, images);
 
         holder.imageRecyclerView.setHasFixedSize(true);
