@@ -4,30 +4,53 @@ import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
+import androidx.room.Transaction;
 
+import com.example.galleryproject.Database.Entity.DbLabel;
 import com.example.galleryproject.Database.Entity.DbRepImage;
 
 import java.util.List;
 
 @Dao
-public interface DbRepImageDao {
+public abstract class DbRepImageDao {
 
     @Query("SELECT * FROM rep_image")
-    List<DbRepImage> getAll();
+    public abstract List<DbRepImage> getAll();
 
     @Query("SELECT * FROM rep_image WHERE id = (:id)")
-    List<DbRepImage> loadAllById(int id);
+    public abstract List<DbRepImage> loadAllById(int id);
 
     @Query("SELECT * FROM rep_image WHERE id IN (:ids)")
-    List<DbRepImage> loadAllByIds(int[] ids);
+    public abstract List<DbRepImage> loadAllByIds(int[] ids);
 
 
-    @Query("SELECT * FROM rep_image WHERE group_id = (:groupId)")
-    List<DbRepImage> loadAllByImageGroupId(int groupId);
+    /**
+     * RepImage (ImageCollection - Image) 관계 호출
+     * @param collectionId
+     * @return
+     */
+    @Query("SELECT * FROM rep_image WHERE collection_id = (:collectionId)")
+    public abstract List<DbRepImage> loadAllByImageGroupId(int collectionId);
+
+    /**
+     * RepImage 저장
+     * @param repImage
+     * @param collectionId
+     * @param imageId
+     */
+    @Transaction
+    public void insertWithCollectionAndImage (DbRepImage repImage, int collectionId, int imageId) {
+        repImage.setCollectionId(collectionId);
+        repImage.setImageId(imageId);
+        insert(repImage);
+    }
 
     @Insert
-    void insertAll(DbRepImage... dbRepImages);
+    public abstract void insertAll(DbRepImage... dbRepImages);
+
+    @Insert
+    public abstract void insert(DbRepImage dbRepImage);
 
     @Delete
-    void delete(DbRepImage dbRepImage);
+    public abstract void delete(DbRepImage dbRepImage);
 }

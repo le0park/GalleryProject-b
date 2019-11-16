@@ -12,6 +12,7 @@ import com.example.galleryproject.Database.Dao.DbImageDao;
 import com.example.galleryproject.Database.Dao.DbImageGroupDao;
 import com.example.galleryproject.Database.Dao.DbImagesWithImageGroupDao;
 import com.example.galleryproject.Database.Dao.DbMlkitLabelDao;
+import com.example.galleryproject.Database.Dao.DbRepImageDao;
 import com.example.galleryproject.Database.Entity.DbImage;
 import com.example.galleryproject.Database.Entity.DbImageCollection;
 import com.example.galleryproject.Database.Entity.DbImageGroup;
@@ -34,6 +35,7 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract DbImageDao dbImageDao();
     public abstract DbImageGroupDao dbImageGroupDao();
     public abstract DbImageCollectionDao dbImageCollectionDao();
+    public abstract DbRepImageDao dbRepImageDao();
 
     private static volatile AppDatabase sInstance;
 

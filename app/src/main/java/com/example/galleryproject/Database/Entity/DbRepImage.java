@@ -12,12 +12,12 @@ import androidx.room.PrimaryKey;
             @ForeignKey(entity = DbImage.class,
                         parentColumns = "id",
                         childColumns = "image_id"),
-            @ForeignKey(entity = DbImageGroup.class,
+            @ForeignKey(entity = DbImageCollection.class,
                     parentColumns = "id",
-                    childColumns = "group_id")
+                    childColumns = "collection_id")
         },
         indices = {
-            @Index("group_id"),
+            @Index("collection_id"),
             @Index("image_id")
         })
 
@@ -28,6 +28,14 @@ public class DbRepImage {
     @ColumnInfo(name = "image_id")
     public Integer imageId;
 
-    @ColumnInfo(name = "group_id")
-    public Integer groupId;
+    @ColumnInfo(name = "collection_id")
+    public Integer collectionId;
+
+    public void setImageId(Integer imageId) {
+        this.imageId = imageId;
+    }
+
+    public void setCollectionId(Integer collectionId) {
+        this.collectionId = collectionId;
+    }
 }
