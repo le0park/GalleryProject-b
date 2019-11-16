@@ -24,12 +24,10 @@ public abstract class DbImageCollectionDao {
     public abstract void insertAll(DbImageCollection... dbImageCollections);
 
     @Transaction
-    public List<Long> insertWithGroups(DbImageCollection collection, List<DbImageGroup> groups) {
-        final long collectionId = insert(collection);
-
+    public List<Long> insertWithGroups(int collectionId, List<DbImageGroup> groups) {
         List<Long> groupIds = new ArrayList<>();
         for (DbImageGroup group: groups) {
-            group.setCollectionId((int) collectionId);
+            group.setCollectionId(collectionId);
             Long groupId = insert(group);
 
             groupIds.add(groupId);

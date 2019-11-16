@@ -10,11 +10,9 @@ import androidx.room.Transaction;
 import com.example.galleryproject.Database.Entity.DbImage;
 import com.example.galleryproject.Database.Entity.DbImageGroup;
 import com.example.galleryproject.Database.Entity.DbLabel;
-import com.example.galleryproject.Model.Adapter.ImageAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static androidx.room.OnConflictStrategy.REPLACE;
 
@@ -39,6 +37,14 @@ public abstract class DbImagesWithImageGroupDao {
             label.setImageId((int) imageId);
             insert(label);
         }
+    }
+
+    @Transaction
+    public long insertImageWithGroupId(long groupId, DbImage image) {
+        image.setGroupId((int) groupId);
+        long imageId = insert(image);
+
+        return imageId;
     }
 
 
