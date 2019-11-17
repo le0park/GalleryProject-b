@@ -12,11 +12,13 @@ import com.example.galleryproject.Database.Dao.DbImageDao;
 import com.example.galleryproject.Database.Dao.DbImageGroupDao;
 import com.example.galleryproject.Database.Dao.DbImagesWithImageGroupDao;
 import com.example.galleryproject.Database.Dao.DbMlkitLabelDao;
+import com.example.galleryproject.Database.Dao.DbPriorityDao;
 import com.example.galleryproject.Database.Dao.DbRepImageDao;
 import com.example.galleryproject.Database.Entity.DbImage;
 import com.example.galleryproject.Database.Entity.DbImageCollection;
 import com.example.galleryproject.Database.Entity.DbImageGroup;
 import com.example.galleryproject.Database.Entity.DbLabel;
+import com.example.galleryproject.Database.Entity.DbPriority;
 import com.example.galleryproject.Database.Entity.DbRepImage;
 
 
@@ -25,8 +27,9 @@ import com.example.galleryproject.Database.Entity.DbRepImage;
                 DbLabel.class,
                 DbImageGroup.class,
                 DbRepImage.class,
-                DbImageCollection.class
-            },
+                DbImageCollection.class,
+                DbPriority.class
+          },
           version = 1,
           exportSchema = false)
 @TypeConverters({Converters.class})
@@ -36,6 +39,7 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract DbImageGroupDao dbImageGroupDao();
     public abstract DbImageCollectionDao dbImageCollectionDao();
     public abstract DbRepImageDao dbRepImageDao();
+    public abstract DbPriorityDao dbPriorityDao();
 
     private static volatile AppDatabase sInstance;
 
