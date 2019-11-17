@@ -2,6 +2,11 @@ package com.example.galleryproject;
 
 import android.app.Activity;
 import android.content.res.AssetFileDescriptor;
+import android.util.Log;
+
+import com.example.galleryproject.Model.Image;
+import com.example.galleryproject.Model.ImageCollection;
+import com.example.galleryproject.Model.ImageGroup;
 
 import org.tensorflow.lite.Interpreter;
 
@@ -9,7 +14,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class DeepLearningModel {
     private Activity activity;
@@ -50,4 +60,32 @@ public class DeepLearningModel {
     }
 
 
+    public List<Image> getRepImages(ImageCollection result, float[][] priority) {
+        // priority[i][0];
+        List<Image> all_imagesInTimeLine = new ArrayList<>();
+
+        List<Image> repImages = new ArrayList<>();
+        Map<Float, Image> hash = new HashMap<>();
+
+        int priorityInx = 0;
+        for(int imageGroupInx = 0; imageGroupInx < result.getGroups().size(); imageGroupInx++){
+            ImageGroup ig = result.getGroups().get(imageGroupInx);
+            for(int imageInx = 0; imageInx < ig.getImages().size(); imageInx++){
+                Image im = ig.getImages().get(imageInx);
+                hash.put(priority[priorityInx][0], im);
+                priorityInx++;
+                if(priorityInx == priority.length)
+                    break;
+            }
+            if(priorityInx == priority.length)
+                break;
+        }
+
+        List<Float> priorities = new ArrayList<>(hash.keySet());
+        Collections.sort(priorities, Collections.reverseOrder());
+        for(float p : priorities)
+            Log.e("SORTED_PRIORITY : ", p + " " + hash.get(p));
+
+        return repImages;
+    }
 }

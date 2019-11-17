@@ -290,33 +290,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, Cluster
     }
 
     private void addItems() {
-//        // http://www.flickr.com/photos/sdasmarchives/5036248203/
-//        mClusterManager.addItem(new Person(position(), "Walter", R.drawable.walter));
-//
-//        // http://www.flickr.com/photos/usnationalarchives/4726917149/
-//        mClusterManager.addItem(new Person(position(), "Gran", R.drawable.gran));
-//
-//        // http://www.flickr.com/photos/nypl/3111525394/
-//        mClusterManager.addItem(new Person(position(), "Ruth", R.drawable.ruth));
-//
-//        // http://www.flickr.com/photos/smithsonian/2887433330/
-//        mClusterManager.addItem(new Person(position(), "Stefan", R.drawable.stefan));
-//
-//        // http://www.flickr.com/photos/library_of_congress/2179915182/
-//        mClusterManager.addItem(new Person(position(), "Mechanic", R.drawable.mechanic));
-//
-//        // http://www.flickr.com/photos/nationalmediamuseum/7893552556/
-//        mClusterManager.addItem(new Person(position(), "Yeats", R.drawable.yeats));
-//
-//        // http://www.flickr.com/photos/sdasmarchives/5036231225/
-//        mClusterManager.addItem(new Person(position(), "John", R.drawable.john));
-//
-//        // http://www.flickr.com/photos/anmm_thecommons/7694202096/
-//        mClusterManager.addItem(new Person(position(), "Trevor the Turtle", R.drawable.turtle));
-//
-//        // http://www.flickr.com/photos/usnationalarchives/4726892651/
-//        mClusterManager.addItem(new Person(position(), "Teach", R.drawable.teacher));
-
         mClusterManager.addItem(new MarkerItem(position(), filePath_example));
         mClusterManager.addItem(new MarkerItem(position(), filePath_example));
         mClusterManager.addItem(new MarkerItem(position(), filePath_example1));

@@ -83,7 +83,6 @@ public class PhotoGroupActivity extends AppCompatActivity {
         photoGroup_Memo_editText = findViewById(R.id.photoGroup_Memo_editText);
         photoGroup_Memo_textView = findViewById(R.id.photoGroup_Memo_textView);
 
-        photoGroup_date_textView.setText(imageGroup.getDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
         photoGroup_date_textView.setText(imageCollection.getDate().toString());
         photoGroup_Memo_textView.setText(imageCollection.getMemo());
 
