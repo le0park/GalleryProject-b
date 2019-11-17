@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,6 +21,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.example.galleryproject.Database.AppDatabase;
+import com.example.galleryproject.Database.AppExecutors;
+import com.example.galleryproject.Model.Adapter.DbImageCollectionAdapter;
 import com.example.galleryproject.Model.Image;
 import com.example.galleryproject.Model.ImageCollection;
 import com.example.galleryproject.ui.all.AllRecyclerViewDecoration;
@@ -101,7 +105,13 @@ public class PhotoGroupActivity extends AppCompatActivity {
             photoGroup_Memo_editText.clearFocus();
             imm.hideSoftInputFromWindow(photoGroup_Memo_editText.getWindowToken(), 0);
             saveButton.setVisibility(View.GONE);
-            //TODO 수정한 메모 저장
+
+            if (imageCollection instanceof DbImageCollectionAdapter) {
+                DbImageCollectionAdapter dca = (DbImageCollectionAdapter) imageCollection;
+                int dcId = dca.getId();
+
+                AppExecutors.getInstance().diskIO().execute(() -> AppDatabase.getInstance(this).dbImageCollectionDao().updateMemo(dcId, photoGroup_Memo_editText.getText().toString()));
+            }
         });
 
         photoGroup_backButton.setOnClickListener((view) -> finish());

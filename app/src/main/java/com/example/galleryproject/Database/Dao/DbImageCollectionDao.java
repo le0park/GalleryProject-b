@@ -36,6 +36,9 @@ public abstract class DbImageCollectionDao {
         return groupIds;
     }
 
+    @Query("UPDATE image_collection SET memo = :memo WHERE id = :id;")
+    public abstract void updateMemo(int id, String memo);
+
     @Insert
     public abstract long insert(DbImageCollection dbImageCollection);
 
