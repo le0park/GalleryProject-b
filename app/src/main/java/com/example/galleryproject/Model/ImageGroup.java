@@ -2,6 +2,7 @@ package com.example.galleryproject.Model;
 
 import android.os.Parcelable;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,31 +10,24 @@ import java.util.List;
 public abstract class ImageGroup implements Parcelable {
 
     protected List<Image> images;
-    protected String memo;
 
     public ImageGroup() {
-        this(new ArrayList<>(), "");
+        this(new ArrayList<>());
     }
 
     public ImageGroup(List<Image> images) {
-        this(images, "");
+        this.images = images;
     }
 
-    public ImageGroup(List<Image> images, String memo){
-        this.images = images;
-        this.memo = memo;
-    }
 
     public void addImage(Image image) {
         images.add(image);
     }
 
-    public List<String> getFilePaths() {
-        List<String> paths = new ArrayList<>();
+    public List<File> getFiles() {
+        List<File> paths = new ArrayList<>();
         for (Image image: images) {
-            paths.add(image.getFile()
-                           .toPath()
-                           .toString());
+            paths.add(image.getFile());
         }
 
         return paths;
@@ -47,29 +41,22 @@ public abstract class ImageGroup implements Parcelable {
         this.images = images;
     }
 
-    public String getMemo() {
-        return memo;
-    }
-
-    public void setMemo(String memo) {
-        this.memo = memo;
-    }
 
     public LocalDateTime getDate() {
         return getStartDate();
     }
 
-    public LocalDateTime getStartDate() {
-        LocalDateTime start = LocalDateTime.now();
-        for (Image image: images) {
-            LocalDateTime t = image.getCreationTime();
+        public LocalDateTime getStartDate() {
+            LocalDateTime start = LocalDateTime.now();
+            for (Image image: images) {
+                LocalDateTime t = image.getCreationTime();
 
-            if (start.compareTo(t) >= 0) {
-                start = t;
+                if (start.compareTo(t) >= 0) {
+                    start = t;
+                }
             }
-        }
 
-        return start;
+            return start;
     }
 
 

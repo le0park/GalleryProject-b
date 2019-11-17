@@ -2,33 +2,33 @@ package com.example.galleryproject.ui.timeLine;
 
 import androidx.lifecycle.ViewModel;
 
-import com.example.galleryproject.Model.ImageGroup;
-
 import java.util.List;
+
+import com.example.galleryproject.Model.ImageCollection;
 
 public class TimeLineViewModel extends ViewModel {
 
-    private volatile ImageGroupListLiveData imageGroups;
+    private volatile ImageCollectionLiveData imageCollections;
 
-    public ImageGroupListLiveData getImageGroups() {
-        if (imageGroups == null) {
+    public ImageCollectionLiveData getImageGroups() {
+        if (imageCollections == null) {
             synchronized (TimeLineViewModel.class) {
-                if (imageGroups == null) {
-                    imageGroups = new ImageGroupListLiveData();
+                if (imageCollections == null) {
+                    imageCollections = new ImageCollectionLiveData();
                 }
             }
         }
 
-        return imageGroups;
+        return imageCollections;
     }
 
-    public void insert(ImageGroup item) {
-        imageGroups.add(item);
+    public void insert(ImageCollection item) {
+        imageCollections.add(item);
     }
 
 
-    public void insertAll(List<ImageGroup> items) {
-        imageGroups.addAll(items);
+    public void insertAll(List<ImageCollection> items) {
+        imageCollections.addAll(items);
     }
 
     private void loadImageGroups() {

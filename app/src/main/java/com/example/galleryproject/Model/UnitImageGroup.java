@@ -14,10 +14,6 @@ public class UnitImageGroup extends ImageGroup {
         super(images);
     }
 
-    public UnitImageGroup(List<Image> images, String memo) {
-        super(images, memo);
-    }
-
 
     /**
      * Implements Parcelable
@@ -29,8 +25,6 @@ public class UnitImageGroup extends ImageGroup {
         in.readList(images, Image.class.getClassLoader());
         this.setImages(images);
 
-        String memo = in.readString();
-        this.setMemo(memo);
     }
 
     @Override
@@ -41,7 +35,6 @@ public class UnitImageGroup extends ImageGroup {
     @Override
     public void writeToParcel(Parcel parcel, int i) {
         parcel.writeList(images);
-        parcel.writeString(memo);
     }
 
     public static final Creator<UnitImageGroup> CREATOR = new Creator<UnitImageGroup>() {

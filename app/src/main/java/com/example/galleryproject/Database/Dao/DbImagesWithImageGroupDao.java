@@ -11,6 +11,7 @@ import com.example.galleryproject.Database.Entity.DbImage;
 import com.example.galleryproject.Database.Entity.DbImageGroup;
 import com.example.galleryproject.Database.Entity.DbLabel;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static androidx.room.OnConflictStrategy.REPLACE;
@@ -18,42 +19,44 @@ import static androidx.room.OnConflictStrategy.REPLACE;
 @Dao
 public abstract class DbImagesWithImageGroupDao {
     @Transaction
-    public void insertImagesWithImageGroup(DbImageGroup group, List<DbImage> images, List<List<DbLabel>> labels) {
-        // Save rowId of inserted CompanyEntity as companyId
-        final long groupId = insert(group);
-
-        // Set companyId for all related employeeEntities
-        int imageCount = images.size();
-        int labelCount = labels.size();
-
-        assert(imageCount == labelCount);
-
-        for (int iIdx = 0; iIdx < imageCount; iIdx++) {
-            DbImage image = images.get(iIdx);
-
+    public List<Long> insertImagesWithImageGroupId(long groupId, List<DbImage> images) {
+        List<Long> imageIds = new ArrayList<>();
+        for (DbImage image: images) {
             image.setGroupId((int) groupId);
+
             long imageId = insert(image);
-
-            List<DbLabel> labelGroup = labels.get(iIdx);
-            for (int lIdx = 0; lIdx < labelGroup.size(); lIdx++) {
-                DbLabel label = labelGroup.get(lIdx);
-
-                label.setImageId((int) imageId);
-                insert(label);
-            }
+            imageIds.add(imageId);
         }
+
+        return imageIds;
+    }
+
+    @Transaction
+    public void insertLabelsWithImageId(long imageId, List<DbLabel> labels) {
+        for (DbLabel label: labels) {
+            label.setImageId((int) imageId);
+            insert(label);
+        }
+    }
+
+    @Transaction
+    public long insertImageWithGroupId(long groupId, DbImage image) {
+        image.setGroupId((int) groupId);
+        long imageId = insert(image);
+
+        return imageId;
     }
 
 
     @Insert
     public abstract long insert(DbImage image);
 
-
     @Insert
     public abstract long insert(DbLabel label);
 
     @Insert
     public abstract void insert(DbLabel... labels);
+
 
     // If the @Insert method receives only 1 parameter, it can return a long,
     // which is the new rowId for the inserted item.

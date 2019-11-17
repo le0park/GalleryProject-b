@@ -1,19 +1,18 @@
 package com.example.galleryproject.ui.timeLine;
 
-import com.example.galleryproject.Model.ImageGroup;
+import com.example.galleryproject.Model.ImageCollection;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-public class ImageGroupListLiveData extends ListLiveData<ImageGroup> {
-    public ImageGroupListLiveData() {
+public class ImageCollectionLiveData extends ListLiveData<ImageCollection> {
+    public ImageCollectionLiveData() {
         this(new ArrayList<>());
     }
 
-    public ImageGroupListLiveData(List<ImageGroup> list){
+    public ImageCollectionLiveData(List<ImageCollection> list){
         if (list.size() > 0) {
             Collections.sort(list, (t1, t2) -> {
                 LocalDateTime d1 = t1.getDate();
@@ -28,8 +27,8 @@ public class ImageGroupListLiveData extends ListLiveData<ImageGroup> {
 
     // Todo:  add 할 때 시간 데이터를 보고 다른 그룹과 합치는 과정도 있어야함.
     @Override
-    public void add(ImageGroup item){
-        List<ImageGroup> groups = getValue();
+    public void add(ImageCollection item){
+        List<ImageCollection> groups = getValue();
 
         int position = searchInsertPosition(groups, item);
         groups.add(position, item);
@@ -38,10 +37,10 @@ public class ImageGroupListLiveData extends ListLiveData<ImageGroup> {
     }
 
     @Override
-    public void addAll(List<ImageGroup> items){
-        List<ImageGroup> groups = getValue();
+    public void addAll(List<ImageCollection> items){
+        List<ImageCollection> groups = getValue();
 
-        for (ImageGroup item: items) {
+        for (ImageCollection item: items) {
             int position = searchInsertPosition(groups, item);
             groups.add(position, item);
         }
@@ -49,7 +48,7 @@ public class ImageGroupListLiveData extends ListLiveData<ImageGroup> {
         setValue(groups);
     }
 
-    private static int searchInsertPosition(List<ImageGroup> list, ImageGroup target) {
+    private static int searchInsertPosition(List<ImageCollection> list, ImageCollection target) {
         LocalDateTime tt = target.getDate();
 
         int i = 0;

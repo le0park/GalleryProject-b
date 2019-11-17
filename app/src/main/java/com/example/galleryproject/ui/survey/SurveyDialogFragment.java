@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.galleryproject.MainActivity;
+import com.example.galleryproject.Model.Category;
 import com.example.galleryproject.R;
 
 import java.util.ArrayList;
@@ -36,7 +37,15 @@ public class SurveyDialogFragment extends DialogFragment implements SurveyAdapte
 
     private SurveyClickListener listener;
 
-    public SurveyDialogFragment() {}
+    private static final ArrayList<Integer> OBJECT_CATEGORIES = new ArrayList<>();
+
+    public SurveyDialogFragment() {
+        OBJECT_CATEGORIES.add(Category.PERSON);
+        OBJECT_CATEGORIES.add(Category.FOOD);
+        OBJECT_CATEGORIES.add(Category.PET);
+        OBJECT_CATEGORIES.add(Category.SCENERY);
+
+    }
 
     public static SurveyDialogFragment getInstance() {
         SurveyDialogFragment surveyDialogFragment = new SurveyDialogFragment();
@@ -67,13 +76,13 @@ public class SurveyDialogFragment extends DialogFragment implements SurveyAdapte
         });
 
         survey_recyclerView = view.findViewById(R.id.survey_recyclerView);
-        survey_recyclerView.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false)) ;
+        survey_recyclerView.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
 
         categories = new ArrayList<>();
-        categories.add("사람");
-        categories.add("음식");
-        categories.add("반려동물");
-        categories.add("풍경");
+        for (Integer category: OBJECT_CATEGORIES) {
+            categories.add(Category.getName(category));
+        }
+
         adapter = new SurveyAdapter(categories, this);
 
         ItemTouchHelper.Callback mCallback = new SurveyItemTouchHelperCallback(adapter);

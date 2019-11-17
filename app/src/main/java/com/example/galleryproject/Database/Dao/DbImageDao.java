@@ -7,12 +7,16 @@ import androidx.room.Query;
 
 import com.example.galleryproject.Database.Entity.DbImage;
 
+import java.io.File;
 import java.util.List;
 
 @Dao
 public interface DbImageDao {
     @Query("SELECT * FROM image")
     List<DbImage> getAll();
+
+    @Query("SELECT * FROM image WHERE group_id = :groupId")
+    List<DbImage> loadWithGroupId(int groupId);
 
     @Query("SELECT * FROM image WHERE id IN (:ids)")
     List<DbImage> loadAllByIds(int[] ids);
@@ -25,6 +29,11 @@ public interface DbImageDao {
     @Query("SELECT * FROM image WHERE id = :groupId")
     List<DbImage> loadAllByGroupId(int groupId);
 
+    @Query("SELECT EXISTS(SELECT 1 FROM image WHERE path = :path);")
+    Boolean checkIfExist(File path);
+
+    @Query("SELECT * FROM image WHERE path = :path;")
+    long getId(File path);
 
     @Insert
     void insert(DbImage dbImage);

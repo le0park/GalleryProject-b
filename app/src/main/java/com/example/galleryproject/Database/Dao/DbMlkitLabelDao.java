@@ -19,7 +19,7 @@ public interface DbMlkitLabelDao {
     List<DbLabel> loadAllByImageIds(int[] imageIds);
 
 
-    @Query("SELECT * FROM mlkit_label WHERE id = (:imageId)")
+    @Query("SELECT * FROM mlkit_label WHERE image_id = (:imageId)")
     List<DbLabel> loadAllByImageId(int imageId);
 
     @Insert
