@@ -37,14 +37,14 @@ public class SurveyDialogFragment extends DialogFragment implements SurveyAdapte
 
     private SurveyClickListener listener;
 
-    private static final ArrayList<Integer> OBJECT_CATEGORIES = new ArrayList<>();
+    private static ArrayList<Integer> OBJECT_CATEGORIES;
 
     public SurveyDialogFragment() {
+        OBJECT_CATEGORIES = new ArrayList<>();
         OBJECT_CATEGORIES.add(Category.PERSON);
         OBJECT_CATEGORIES.add(Category.FOOD);
         OBJECT_CATEGORIES.add(Category.PET);
         OBJECT_CATEGORIES.add(Category.SCENERY);
-
     }
 
     public static SurveyDialogFragment getInstance() {
