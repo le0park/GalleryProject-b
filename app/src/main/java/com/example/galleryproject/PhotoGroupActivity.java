@@ -7,8 +7,8 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,7 +26,6 @@ import com.example.galleryproject.ui.all.AllRecyclerViewDecoration;
 import com.example.galleryproject.Model.ImageGroup;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -110,40 +109,9 @@ public class PhotoGroupActivity extends AppCompatActivity {
         photoGroup_RecyclerView = findViewById(R.id.photoGroup_RecyclerView);
         photoGroup_RecyclerView.setLayoutManager(new GridLayoutManager(getApplicationContext(), 2));
         adapter = new Adapter(images, (image) -> {
-
-            List<Boolean> nowSelected = imageGroups.stream()
-                                                    .map(x -> x.getImages().contains(image))
-                                                    .collect(Collectors.toList());
-
-            StringBuilder msg1 = new StringBuilder();
-            for (Boolean b: nowSelected) {
-                msg1.append(b)
-                    .append(", ");
-            }
-
-            Log.e("PhotoGroupActivity", nowSelected.size() + "");
-            Log.e("PhotoGroupActivity", msg1.toString());
-
-            StringBuilder msg2 = new StringBuilder();
-            for (Boolean b: selected) {
-                msg2.append(b)
-                    .append(", ");
-            }
-
-            Log.e("PhotoGroupActivity", selected.size() + "");
-            Log.e("PhotoGroupActivity", msg2.toString());
-
-            for (int i = 0; i < nowSelected.size(); i++) {
-                if (nowSelected.get(i)) {
-                    boolean current = selected.get(i);
-                    selected.set(i, !current);
-
-                    String currentMemo = imageCollection.getMemo();
-                    imageCollection.setMemo(currentMemo + "\n/// " + i);
-                    photoGroup_Memo_textView.setText(imageCollection.getMemo());
-                }
-            }
-
+            Intent intent = new Intent(this, PhotoActivity.class);
+            intent.putExtra("Image", image);
+            startActivity(intent);
         });
 
         photoGroup_RecyclerView.setAdapter(adapter);
@@ -157,8 +125,6 @@ public class PhotoGroupActivity extends AppCompatActivity {
         Adapter(List<Image> images, OnItemClickListener listener){
             this.images = images;
             this.listener = listener;
-//            for(String filepath : filePaths)
-//                Log.e("Adapter : ", filepath);
         }
 
         class ViewHolder extends RecyclerView.ViewHolder {

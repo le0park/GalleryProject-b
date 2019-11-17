@@ -18,7 +18,7 @@ import java.util.Collections;
 import java.util.List;
 
 
-public abstract class Image implements Serializable, Parcelable {
+public abstract class Image implements Parcelable {
     private File file;
     private LocalDateTime creationTime;
 
