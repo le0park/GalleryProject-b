@@ -12,6 +12,7 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
@@ -87,9 +88,16 @@ public class TimeLineFragment extends Fragment {
     private int imageOrderIdx = 0;
     private List<List<Image>> partedImages;
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+    }
+
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
 
+        Log.e("TESTTESTTEST", "Oncreateview called ");
         View root = inflater.inflate(R.layout.fragment_timeline, container, false);
 
         timeLineRecyclerView = root.findViewById(R.id.timeLineRecyclerView);
@@ -136,34 +144,8 @@ public class TimeLineFragment extends Fragment {
         AppExecutors.getInstance()
                     .diskIO()
                     .execute(() -> {
-                        List<ImageCollection> collections = new ArrayList<>();
-                        List<DbImageCollection> dbCollections =
-                                mDb.dbImageCollectionDao().getAll();
 
-                        for (DbImageCollection dbCollection: dbCollections) {
-                            List<DbImageGroup> dbImageGroups =
-                                    mDb.dbImageGroupDao().loadAllWithCollectionId(dbCollection.id);
-
-                            List<ImageGroup> imageGroups = new ArrayList<>();
-                            for (DbImageGroup group: dbImageGroups) {
-                                List<DbImage> dbImages = mDb.dbImageDao()
-                                                            .loadWithGroupId(group.id);
-
-                                List<Image> newImages = dbImages.stream()
-                                                                .map(DbImageAdapter::new)
-                                                                .collect(Collectors.toList());
-
-                                imageGroups.add(new DbImageGroupAdapter(group, newImages));
-                            }
-
-                            List<DbImage> dbImages = mDb.dbRepImageDao().getRepImageForCollection(dbCollection.id);
-                            List<Image> repImages = dbImages.stream()
-                                                            .map(DbImageAdapter::new)
-                                                            .collect(Collectors.toList());
-
-                            collections.add(new DbImageCollectionAdapter(dbCollection, imageGroups, repImages));
-                        }
-
+                        List<ImageCollection> collections = getCollectionsFromDb();
 
                         AppExecutors.getInstance()
                                     .mainThread()
@@ -259,7 +241,51 @@ public class TimeLineFragment extends Fragment {
         return root;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        timeLineViewModel.getImageGroups().clear(true);
+        AppExecutors.getInstance().diskIO().execute(() -> {
+            List<ImageCollection> collections = getCollectionsFromDb();
+            AppExecutors.getInstance()
+                        .mainThread()
+                        .execute(() -> timeLineViewModel.getImageGroups().addAll(collections));
+        });
+    }
 
+
+    @WorkerThread
+    public List<ImageCollection> getCollectionsFromDb() {
+        List<ImageCollection> collections = new ArrayList<>();
+        List<DbImageCollection> dbCollections =
+                mDb.dbImageCollectionDao().getAll();
+
+        for (DbImageCollection dbCollection: dbCollections) {
+            List<DbImageGroup> dbImageGroups =
+                    mDb.dbImageGroupDao().loadAllWithCollectionId(dbCollection.id);
+
+            List<ImageGroup> imageGroups = new ArrayList<>();
+            for (DbImageGroup group: dbImageGroups) {
+                List<DbImage> dbImages = mDb.dbImageDao()
+                        .loadWithGroupId(group.id);
+
+                List<Image> newImages = dbImages.stream()
+                        .map(DbImageAdapter::new)
+                        .collect(Collectors.toList());
+
+                imageGroups.add(new DbImageGroupAdapter(group, newImages));
+            }
+
+            List<DbImage> dbImages = mDb.dbRepImageDao().getRepImageForCollection(dbCollection.id);
+            List<Image> repImages = dbImages.stream()
+                    .map(DbImageAdapter::new)
+                    .collect(Collectors.toList());
+
+            collections.add(new DbImageCollectionAdapter(dbCollection, imageGroups, repImages));
+        }
+
+        return collections;
+    }
 
     private RecyclerSectionItemDecoration.SectionCallback getSectionCallback(final ArrayList<ImageCollection> data) {
         return new RecyclerSectionItemDecoration.SectionCallback() {
