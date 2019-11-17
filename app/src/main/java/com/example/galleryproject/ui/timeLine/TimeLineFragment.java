@@ -144,13 +144,28 @@ public class TimeLineFragment extends Fragment {
         AppExecutors.getInstance()
                     .diskIO()
                     .execute(() -> {
+                        int offset = 0;
+                        int size = 0;
+                        while (offset == 0 || size != 0) {
+                            List<ImageCollection> collections = getCollectionsFromDbByRange(10, offset);
 
-                        List<ImageCollection> collections = getCollectionsFromDb();
+                            size = collections.size();
+                            offset += size;
 
-                        AppExecutors.getInstance()
-                                    .mainThread()
-                                    .execute(() -> timeLineViewModel.insertAll(collections));
+                            AppExecutors.getInstance()
+                                        .mainThread()
+                                        .execute(() -> timeLineViewModel.insertAll(collections));
+                        }
+                    });
 
+        AppExecutors.getInstance()
+                    .diskIO()
+                    .execute(() -> {
+//                        List<ImageCollection> collections = getCollectionsFromDb();
+
+//                        AppExecutors.getInstance()
+//                                    .mainThread()
+//                                    .execute(() -> timeLineViewModel.insertAll(collections));
 
                         // 이미지 파일 목록 추출
                         targetFiles = getListOfFile();
@@ -245,12 +260,23 @@ public class TimeLineFragment extends Fragment {
     public void onResume() {
         super.onResume();
         timeLineViewModel.getImageGroups().clear(true);
-        AppExecutors.getInstance().diskIO().execute(() -> {
-            List<ImageCollection> collections = getCollectionsFromDb();
-            AppExecutors.getInstance()
-                        .mainThread()
-                        .execute(() -> timeLineViewModel.getImageGroups().addAll(collections));
-        });
+        AppExecutors.getInstance()
+                    .diskIO()
+                    .execute(() -> {
+                        int offset = 0;
+                        int size = 0;
+                        while (offset == 0 || size != 0) {
+                            List<ImageCollection> collections = getCollectionsFromDbByRange(10, offset);
+
+                            size = collections.size();
+                            offset += size;
+
+                            AppExecutors.getInstance()
+                                    .mainThread()
+                                    .execute(() -> timeLineViewModel.insertAll(collections));
+                        }
+                    });
+
     }
 
 
@@ -259,6 +285,39 @@ public class TimeLineFragment extends Fragment {
         List<ImageCollection> collections = new ArrayList<>();
         List<DbImageCollection> dbCollections =
                 mDb.dbImageCollectionDao().getAll();
+
+        for (DbImageCollection dbCollection: dbCollections) {
+            List<DbImageGroup> dbImageGroups =
+                    mDb.dbImageGroupDao().loadAllWithCollectionId(dbCollection.id);
+
+            List<ImageGroup> imageGroups = new ArrayList<>();
+            for (DbImageGroup group: dbImageGroups) {
+                List<DbImage> dbImages = mDb.dbImageDao()
+                        .loadWithGroupId(group.id);
+
+                List<Image> newImages = dbImages.stream()
+                        .map(DbImageAdapter::new)
+                        .collect(Collectors.toList());
+
+                imageGroups.add(new DbImageGroupAdapter(group, newImages));
+            }
+
+            List<DbImage> dbImages = mDb.dbRepImageDao().getRepImageForCollection(dbCollection.id);
+            List<Image> repImages = dbImages.stream()
+                    .map(DbImageAdapter::new)
+                    .collect(Collectors.toList());
+
+            collections.add(new DbImageCollectionAdapter(dbCollection, imageGroups, repImages));
+        }
+
+        return collections;
+    }
+
+    @WorkerThread
+    public List<ImageCollection> getCollectionsFromDbByRange(int count, int offset) {
+        List<ImageCollection> collections = new ArrayList<>();
+        List<DbImageCollection> dbCollections =
+                mDb.dbImageCollectionDao().getRange(count, offset);
 
         for (DbImageCollection dbCollection: dbCollections) {
             List<DbImageGroup> dbImageGroups =
