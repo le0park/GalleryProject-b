@@ -13,12 +13,13 @@ import java.util.List;
 
 public class DbImageCollectionAdapter extends ImageCollection {
     private DbImageCollection dbImageCollection;
+    private int id;
 
     public DbImageCollectionAdapter(DbImageCollection dbImageCollection, List<ImageGroup> imageGroups, List<Image> images) {
         super(imageGroups);
 
         this.dbImageCollection = dbImageCollection;
-
+        this.id = this.dbImageCollection.id;
         String memo = this.dbImageCollection.memo;
         setMemo(memo);
 
@@ -41,6 +42,17 @@ public class DbImageCollectionAdapter extends ImageCollection {
         List<Image> images = new ArrayList<>();
         in.readList(images, Image.class.getClassLoader());
         this.setRepImages(images);
+
+        int id = in.readInt();
+        this.setId(id);
+    }
+
+    public int getId() {
+        return this.id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     @Override
@@ -53,6 +65,7 @@ public class DbImageCollectionAdapter extends ImageCollection {
         parcel.writeList(getGroups());
         parcel.writeString(getMemo());
         parcel.writeList(getRepImages());
+        parcel.writeInt(getId());
     }
 
     public static final Parcelable.Creator<DbImageCollectionAdapter> CREATOR = new Parcelable.Creator<DbImageCollectionAdapter>() {

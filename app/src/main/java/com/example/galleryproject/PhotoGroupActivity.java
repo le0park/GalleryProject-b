@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,13 +21,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.example.galleryproject.Database.AppDatabase;
+import com.example.galleryproject.Database.AppExecutors;
+import com.example.galleryproject.Model.Adapter.DbImageCollectionAdapter;
 import com.example.galleryproject.Model.Image;
 import com.example.galleryproject.Model.ImageCollection;
 import com.example.galleryproject.ui.all.AllRecyclerViewDecoration;
 import com.example.galleryproject.Model.ImageGroup;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -102,7 +105,13 @@ public class PhotoGroupActivity extends AppCompatActivity {
             photoGroup_Memo_editText.clearFocus();
             imm.hideSoftInputFromWindow(photoGroup_Memo_editText.getWindowToken(), 0);
             saveButton.setVisibility(View.GONE);
-            //TODO 수정한 메모 저장
+
+            if (imageCollection instanceof DbImageCollectionAdapter) {
+                DbImageCollectionAdapter dca = (DbImageCollectionAdapter) imageCollection;
+                int dcId = dca.getId();
+
+                AppExecutors.getInstance().diskIO().execute(() -> AppDatabase.getInstance(this).dbImageCollectionDao().updateMemo(dcId, photoGroup_Memo_editText.getText().toString()));
+            }
         });
 
         photoGroup_backButton.setOnClickListener((view) -> finish());
@@ -110,40 +119,9 @@ public class PhotoGroupActivity extends AppCompatActivity {
         photoGroup_RecyclerView = findViewById(R.id.photoGroup_RecyclerView);
         photoGroup_RecyclerView.setLayoutManager(new GridLayoutManager(getApplicationContext(), 2));
         adapter = new Adapter(images, (image) -> {
-
-            List<Boolean> nowSelected = imageGroups.stream()
-                                                    .map(x -> x.getImages().contains(image))
-                                                    .collect(Collectors.toList());
-
-            StringBuilder msg1 = new StringBuilder();
-            for (Boolean b: nowSelected) {
-                msg1.append(b)
-                    .append(", ");
-            }
-
-            Log.e("PhotoGroupActivity", nowSelected.size() + "");
-            Log.e("PhotoGroupActivity", msg1.toString());
-
-            StringBuilder msg2 = new StringBuilder();
-            for (Boolean b: selected) {
-                msg2.append(b)
-                    .append(", ");
-            }
-
-            Log.e("PhotoGroupActivity", selected.size() + "");
-            Log.e("PhotoGroupActivity", msg2.toString());
-
-            for (int i = 0; i < nowSelected.size(); i++) {
-                if (nowSelected.get(i)) {
-                    boolean current = selected.get(i);
-                    selected.set(i, !current);
-
-                    String currentMemo = imageCollection.getMemo();
-                    imageCollection.setMemo(currentMemo + "\n/// " + i);
-                    photoGroup_Memo_textView.setText(imageCollection.getMemo());
-                }
-            }
-
+            Intent intent = new Intent(this, PhotoActivity.class);
+            intent.putExtra("Image", image);
+            startActivity(intent);
         });
 
         photoGroup_RecyclerView.setAdapter(adapter);
@@ -157,8 +135,6 @@ public class PhotoGroupActivity extends AppCompatActivity {
         Adapter(List<Image> images, OnItemClickListener listener){
             this.images = images;
             this.listener = listener;
-//            for(String filepath : filePaths)
-//                Log.e("Adapter : ", filepath);
         }
 
         class ViewHolder extends RecyclerView.ViewHolder {

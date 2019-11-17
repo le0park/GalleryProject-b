@@ -3,19 +3,13 @@ package com.example.galleryproject;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
-
-import java.io.File;
+import com.example.galleryproject.Model.Image;
 
 public class PhotoActivity extends AppCompatActivity {
     private ImageButton photo_backButton;
@@ -30,19 +24,16 @@ public class PhotoActivity extends AppCompatActivity {
         actionBar.hide();
 
         Intent intent = getIntent(); /*데이터 수신*/
-        String filePath = intent.getExtras().getString("filePath");
+        Image image = (Image) intent.getExtras().get("Image");
 
-        photo_backButton = (ImageButton) findViewById(R.id.photo_backButton);
+        photo_backButton = findViewById(R.id.photo_backButton);
         photo_backButton.setOnClickListener((view) -> {
             finish();
         });
 
-        photo_imageView = (ImageView) findViewById(R.id.photo_imageView);
-//        Log.e("PHOTO_Activity", filePath);
-//        Bitmap bitmap = BitmapFactory.decodeFile(new File(filePath).getAbsolutePath());
-//        photo_imageView.setImageBitmap(bitmap);
+        photo_imageView = findViewById(R.id.photo_imageView);
         Glide.with(this.getApplicationContext())
-                .load(new File(filePath))
+                .load(image.getFile())
                 .into(photo_imageView);
     }
 }
