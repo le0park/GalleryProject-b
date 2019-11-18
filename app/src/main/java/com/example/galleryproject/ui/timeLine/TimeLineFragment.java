@@ -12,6 +12,7 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
@@ -24,6 +25,7 @@ import com.example.galleryproject.Database.Entity.DbImage;
 import com.example.galleryproject.Database.Entity.DbImageCollection;
 import com.example.galleryproject.Database.Entity.DbImageGroup;
 import com.example.galleryproject.Database.Entity.DbLabel;
+import com.example.galleryproject.Database.Entity.DbPriority;
 import com.example.galleryproject.Database.Entity.DbRepImage;
 import com.example.galleryproject.Model.Adapter.DbImageAdapter;
 import com.example.galleryproject.Model.Adapter.DbImageCollectionAdapter;
@@ -89,9 +91,16 @@ public class TimeLineFragment extends Fragment {
     private int imageOrderIdx = 0;
     private List<List<Image>> partedImages;
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+    }
+
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
 
+        Log.e("TESTTESTTEST", "Oncreateview called ");
         View root = inflater.inflate(R.layout.fragment_timeline, container, false);
 
         timeLineRecyclerView = root.findViewById(R.id.timeLineRecyclerView);
@@ -130,97 +139,213 @@ public class TimeLineFragment extends Fragment {
             topCalendar.setMonthTextView(month);
         });
 
+
+
+
         // 데이터베이스 생성
         mDb = AppDatabase.getInstance(getContext());
+
 
         AppExecutors.getInstance()
                     .diskIO()
                     .execute(() -> {
+                        int offset = 0;
+                        int size = 0;
+                        while (offset == 0 || size != 0) {
+                            List<ImageCollection> collections = getCollectionsFromDbByRange(10, offset);
 
-            List<ImageCollection> collections = new ArrayList<>();
+                            size = collections.size();
+                            offset += size;
 
-            List<DbImageCollection> dbCollections = mDb.dbImageCollectionDao()
-                                                       .getAll();
+                            AppExecutors.getInstance()
+                                        .mainThread()
+                                        .execute(() -> timeLineViewModel.insertAll(collections));
+                        }
+                    });
 
-            for (DbImageCollection dbCollection: dbCollections) {
-                List<DbImageGroup> dbImageGroups =
-                        mDb.dbImageGroupDao()
-                           .loadAllWithCollectionId(dbCollection.id);
+        AppExecutors.getInstance()
+                    .diskIO()
+                    .execute(() -> {
+//                        List<ImageCollection> collections = getCollectionsFromDb();
 
-                List<ImageGroup> imageGroups = new ArrayList<>();
-                for (DbImageGroup group: dbImageGroups) {
-                    List<DbImage> dbImages = mDb.dbImageDao()
-                                                .loadWithGroupId(group.id);
+//                        AppExecutors.getInstance()
+//                                    .mainThread()
+//                                    .execute(() -> timeLineViewModel.insertAll(collections));
 
-                    List<Image> newImages = dbImages.stream()
-                                                    .map(DbImageAdapter::new)
+                        // 이미지 파일 목록 추출
+                        targetFiles = getListOfFile();
+                        selectedImages = targetFiles.stream()
+                                                    .map(UnitImage::new)
                                                     .collect(Collectors.toList());
 
-                    imageGroups.add(new DbImageGroupAdapter(group, newImages));
-                }
+                        // 이미 데이터베이스에 저장되어 있는 파일 제거
+                        List<DbImage> dbImages = mDb.dbImageDao().getAll();
+                        List<Image> newImages = dbImages.stream()
+                                                        .map(x -> new DbImageAdapter(x))
+                                                        .collect(Collectors.toList());
 
-                List<DbImage> dbImages = mDb.dbRepImageDao().getRepImageForCollection(dbCollection.id);
-                List<Image> repImages = dbImages.stream()
-                                                .map(DbImageAdapter::new)
-                                                .collect(Collectors.toList());
+                        selectedImages.removeIf((image) -> newImages.contains(image));
 
-                collections.add(new DbImageCollectionAdapter(dbCollection, imageGroups, repImages));
-            }
-
-
-            AppExecutors.getInstance()
-                        .mainThread()
-                        .execute(() -> timeLineViewModel.insertAll(collections));
+                        imageOrderIdx = 0;
+                        partedImages = splitImagesInDayRange(selectedImages, IMAGE_TIME_RANGE);
 
 
-            // 이미지 파일 목록 추출
-            targetFiles = getListOfFile();
-            selectedImages = targetFiles.stream()
-                                        .map(UnitImage::new)
-                                        .collect(Collectors.toList());
 
-            // 이미 데이터베이스에 저장되어 있는 파일 제거
-            List<DbImage> dbImages = mDb.dbImageDao().getAll();
-            List<Image> newImages = dbImages.stream()
-                                            .map(x -> new DbImageAdapter(x))
-                                            .collect(Collectors.toList());
+                        List<DbPriority> priorities = mDb.dbPriorityDao().getAll();
+                        if (priorities.size() != 4) {
+                            mDb.dbPriorityDao().deleteAll();
+                            AppExecutors.getInstance().mainThread().execute(() -> {
+                                SurveyDialogFragment survey = SurveyDialogFragment.getInstance();
+                                survey.show(getChildFragmentManager(), "Survey Dialog");
+                                survey.setSurveyClickListener((ArrayList<String> categories) -> {
 
-            selectedImages.removeIf((image) -> newImages.contains(image));
+                                    for (int i = 0; i < categories.size(); i++) {
 
+                                        String category = categories.get(i);
+                                        int categoryInt = Category.getValue(category);
+                                        objectPriority.add(categoryInt);
 
-            imageOrderIdx = 0;
-            partedImages = splitImagesInDayRange(selectedImages, IMAGE_TIME_RANGE);
+                                        DbPriority priority = new DbPriority();
+                                        priority.setCategory(categoryInt);
+                                        priority.setRank(i);
+                                        AppExecutors.getInstance().diskIO().execute(() -> {
+                                            mDb.dbPriorityDao().insert(priority);
+                                        });
+                                    }
 
-            AppExecutors.getInstance()
-                        .mainThread()
-                        .execute(() -> {
-                            SurveyDialogFragment survey = SurveyDialogFragment.getInstance();
-                            survey.show(getChildFragmentManager(), "Survey Dialog");
-                            survey.setSurveyClickListener((ArrayList<String> categories) -> {
-                                for (String category: categories) {
-                                    objectPriority.add(
-                                            Category.getValue(category));
-                                }
+                                    objectPriority.add(Category.ETC);
 
-                                objectPriority.add(Category.ETC);
+                                    int[] priority = objectPriority.stream()
+                                            .mapToInt(Integer::intValue)
+                                            .toArray();
 
-                                int[] priority = objectPriority.stream()
-                                        .mapToInt(Integer::intValue)
-                                        .toArray();
+                                    ImageGroupLabelAnalyzer.setLabelPriority(priority);
 
-                                ImageGroupLabelAnalyzer.setLabelPriority(priority);
+                                    if (partedImages.size() > 0) {
+                                        Image[] images = partedImages.get(imageOrderIdx).stream()
+                                                .toArray(Image[]::new);
 
-                                if (partedImages.size() > 0) {
-                                    Image[] images = partedImages.get(imageOrderIdx).stream()
-                                            .toArray(Image[]::new);
-
-                                    new ImageGroupAsyncTask(() -> {}).execute(images);
-                                }
+                                        new ImageGroupAsyncTask(() -> {}).execute(images);
+                                    }
+                                });
                             });
-                        });
+                        } else {
+                            objectPriority = new ArrayList<>();
+                            objectPriority.add(0);
+                            objectPriority.add(0);
+                            objectPriority.add(0);
+                            objectPriority.add(0);
+                            objectPriority.add(0);
+
+                            for (DbPriority priority: priorities) {
+                                objectPriority.set(priority.rank, priority.category);
+                            }
+
+                            objectPriority.set(4, Category.ETC);
+
+
+                            ImageGroupLabelAnalyzer.setLabelPriority(priority);
+
+                            if (partedImages.size() > 0) {
+                                Image[] images = partedImages.get(imageOrderIdx).stream()
+                                        .toArray(Image[]::new);
+
+                                new ImageGroupAsyncTask(() -> {}).execute(images);
+                            }
+                        }
                     });
 
         return root;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        timeLineViewModel.getImageGroups().clear(true);
+        AppExecutors.getInstance()
+                    .diskIO()
+                    .execute(() -> {
+                        int offset = 0;
+                        int size = 0;
+                        while (offset == 0 || size != 0) {
+                            List<ImageCollection> collections = getCollectionsFromDbByRange(10, offset);
+
+                            size = collections.size();
+                            offset += size;
+
+                            AppExecutors.getInstance()
+                                    .mainThread()
+                                    .execute(() -> timeLineViewModel.insertAll(collections));
+                        }
+                    });
+
+    }
+
+
+    @WorkerThread
+    public List<ImageCollection> getCollectionsFromDb() {
+        List<ImageCollection> collections = new ArrayList<>();
+        List<DbImageCollection> dbCollections =
+                mDb.dbImageCollectionDao().getAll();
+
+        for (DbImageCollection dbCollection: dbCollections) {
+            List<DbImageGroup> dbImageGroups =
+                    mDb.dbImageGroupDao().loadAllWithCollectionId(dbCollection.id);
+
+            List<ImageGroup> imageGroups = new ArrayList<>();
+            for (DbImageGroup group: dbImageGroups) {
+                List<DbImage> dbImages = mDb.dbImageDao()
+                        .loadWithGroupId(group.id);
+
+                List<Image> newImages = dbImages.stream()
+                        .map(DbImageAdapter::new)
+                        .collect(Collectors.toList());
+
+                imageGroups.add(new DbImageGroupAdapter(group, newImages));
+            }
+
+            List<DbImage> dbImages = mDb.dbRepImageDao().getRepImageForCollection(dbCollection.id);
+            List<Image> repImages = dbImages.stream()
+                    .map(DbImageAdapter::new)
+                    .collect(Collectors.toList());
+
+            collections.add(new DbImageCollectionAdapter(dbCollection, imageGroups, repImages));
+        }
+
+        return collections;
+    }
+
+    @WorkerThread
+    public List<ImageCollection> getCollectionsFromDbByRange(int count, int offset) {
+        List<ImageCollection> collections = new ArrayList<>();
+        List<DbImageCollection> dbCollections =
+                mDb.dbImageCollectionDao().getRange(count, offset);
+
+        for (DbImageCollection dbCollection: dbCollections) {
+            List<DbImageGroup> dbImageGroups =
+                    mDb.dbImageGroupDao().loadAllWithCollectionId(dbCollection.id);
+
+            List<ImageGroup> imageGroups = new ArrayList<>();
+            for (DbImageGroup group: dbImageGroups) {
+                List<DbImage> dbImages = mDb.dbImageDao()
+                        .loadWithGroupId(group.id);
+
+                List<Image> newImages = dbImages.stream()
+                        .map(DbImageAdapter::new)
+                        .collect(Collectors.toList());
+
+                imageGroups.add(new DbImageGroupAdapter(group, newImages));
+            }
+
+            List<DbImage> dbImages = mDb.dbRepImageDao().getRepImageForCollection(dbCollection.id);
+            List<Image> repImages = dbImages.stream()
+                    .map(DbImageAdapter::new)
+                    .collect(Collectors.toList());
+
+            collections.add(new DbImageCollectionAdapter(dbCollection, imageGroups, repImages));
+        }
+
+        return collections;
     }
 
     private RecyclerSectionItemDecoration.SectionCallback getSectionCallback(final ArrayList<ImageCollection> data) {
