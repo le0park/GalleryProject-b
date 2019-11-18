@@ -138,10 +138,6 @@ public class TimeLineFragment extends Fragment {
                     .execute(() -> {
 
             List<ImageCollection> collections = new ArrayList<>();
-//        for (File file : targetFiles) {
-////            Log.e("ACTIVITY", file.toPath().toString());
-//            selectedImages.add(new UnitImage(file));
-//        }
 
             List<DbImageCollection> dbCollections = mDb.dbImageCollectionDao()
                                                        .getAll();
@@ -150,10 +146,6 @@ public class TimeLineFragment extends Fragment {
                 List<DbImageGroup> dbImageGroups =
                         mDb.dbImageGroupDao()
                            .loadAllWithCollectionId(dbCollection.id);
-//        // 시간 오름차순으로 정렬
-//        selectedImages.sort((i1, i2) -> {
-//            LocalDateTime d1 = i1.getCreationTime();
-//            LocalDateTime d2 = i2.getCreationTime();
 
                 List<ImageGroup> imageGroups = new ArrayList<>();
                 for (DbImageGroup group: dbImageGroups) {
@@ -437,17 +429,9 @@ public class TimeLineFragment extends Fragment {
 
                 List<Image> images = result.getGroups().get(0).getImages();
                 List<Image> repImages = model.getRepImages(result, priority);
-//                for (int i = 0; i < 3; i++) {
-//                    if (i >= images.size()) {
-//                        break;
-//                    }
-//
-//                    repImages.add(images.get(i));
-//                }
 
                 result.setRepImages(repImages);
-
-
+                
                 timeLineViewModel.insert(result);
                 listener.onFinished();
 

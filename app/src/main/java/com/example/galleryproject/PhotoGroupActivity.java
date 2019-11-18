@@ -26,6 +26,7 @@ import com.example.galleryproject.ui.all.AllRecyclerViewDecoration;
 import com.example.galleryproject.Model.ImageGroup;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +47,6 @@ public class PhotoGroupActivity extends AppCompatActivity {
     private ImageCollection imageCollection;
     private List<ImageGroup> imageGroups;
     private List<Boolean> selected;
-
 
 
     @Override
@@ -83,7 +83,7 @@ public class PhotoGroupActivity extends AppCompatActivity {
         photoGroup_Memo_editText = findViewById(R.id.photoGroup_Memo_editText);
         photoGroup_Memo_textView = findViewById(R.id.photoGroup_Memo_textView);
 
-        photoGroup_date_textView.setText(imageCollection.getDate().toString());
+        photoGroup_date_textView.setText(imageCollection.getDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
         photoGroup_Memo_textView.setText(imageCollection.getMemo());
 
         photoGroup_Memo_textView.setOnClickListener((view) -> {
