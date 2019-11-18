@@ -97,7 +97,6 @@ public class TimeLineFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
 
-        Log.e("TESTTESTTEST", "Oncreateview called ");
         View root = inflater.inflate(R.layout.fragment_timeline, container, false);
 
         timeLineRecyclerView = root.findViewById(R.id.timeLineRecyclerView);
@@ -140,32 +139,9 @@ public class TimeLineFragment extends Fragment {
         // 데이터베이스 생성
         mDb = AppDatabase.getInstance(getContext());
 
-
         AppExecutors.getInstance()
                     .diskIO()
                     .execute(() -> {
-                        int offset = 0;
-                        int size = 0;
-                        while (offset == 0 || size != 0) {
-                            List<ImageCollection> collections = getCollectionsFromDbByRange(10, offset);
-
-                            size = collections.size();
-                            offset += size;
-
-                            AppExecutors.getInstance()
-                                        .mainThread()
-                                        .execute(() -> timeLineViewModel.insertAll(collections));
-                        }
-                    });
-
-        AppExecutors.getInstance()
-                    .diskIO()
-                    .execute(() -> {
-//                        List<ImageCollection> collections = getCollectionsFromDb();
-
-//                        AppExecutors.getInstance()
-//                                    .mainThread()
-//                                    .execute(() -> timeLineViewModel.insertAll(collections));
 
                         // 이미지 파일 목록 추출
                         targetFiles = getListOfFile();
@@ -264,16 +240,18 @@ public class TimeLineFragment extends Fragment {
                     .diskIO()
                     .execute(() -> {
                         int offset = 0;
-                        int size = 0;
-                        while (offset == 0 || size != 0) {
+                        int size = -1;
+                        while ((offset == 0 && size == -1) ||
+                                (size != 0)){
                             List<ImageCollection> collections = getCollectionsFromDbByRange(10, offset);
 
                             size = collections.size();
                             offset += size;
-
-                            AppExecutors.getInstance()
-                                    .mainThread()
-                                    .execute(() -> timeLineViewModel.insertAll(collections));
+                            if (size > 0) {
+                                AppExecutors.getInstance()
+                                        .mainThread()
+                                        .execute(() -> timeLineViewModel.insertAll(collections));
+                            }
                         }
                     });
 
