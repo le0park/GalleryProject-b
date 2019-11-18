@@ -48,7 +48,7 @@ public class PhotoGroupActivity extends AppCompatActivity {
 
     private ImageCollection imageCollection;
     private List<ImageGroup> imageGroups;
-    private List<Boolean> selected;
+
 
 
     @Override
@@ -69,14 +69,16 @@ public class PhotoGroupActivity extends AppCompatActivity {
                             .flatMap(List::stream)
                             .collect(Collectors.toList());
 
-        selected = imageGroups.stream()
-                            .map(x -> false)
-                            .collect(Collectors.toList());
+        photoGroup_RecyclerView = findViewById(R.id.photoGroup_RecyclerView);
+        photoGroup_RecyclerView.setLayoutManager(new GridLayoutManager(getApplicationContext(), 2));
+        adapter = new Adapter(images, (image) -> {
+            Intent intent = new Intent(this, PhotoActivity.class);
+            intent.putExtra("Image", image);
+            startActivity(intent);
+        });
 
-        List<File> files = images.stream()
-                                 .map(Image::getFile)
-                                 .collect(Collectors.toList());
-
+        photoGroup_RecyclerView.setAdapter(adapter);
+        photoGroup_RecyclerView.addItemDecoration(new AllRecyclerViewDecoration(10));
 
         imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
         saveButton = findViewById(R.id.saveButton);
@@ -110,22 +112,15 @@ public class PhotoGroupActivity extends AppCompatActivity {
                 DbImageCollectionAdapter dca = (DbImageCollectionAdapter) imageCollection;
                 int dcId = dca.getId();
 
-                AppExecutors.getInstance().diskIO().execute(() -> AppDatabase.getInstance(this).dbImageCollectionDao().updateMemo(dcId, photoGroup_Memo_editText.getText().toString()));
+                AppExecutors.getInstance()
+                            .diskIO()
+                            .execute(() -> AppDatabase.getInstance(this)
+                                                      .dbImageCollectionDao()
+                                                      .updateMemo(dcId, photoGroup_Memo_editText.getText().toString()));
             }
         });
 
         photoGroup_backButton.setOnClickListener((view) -> finish());
-
-        photoGroup_RecyclerView = findViewById(R.id.photoGroup_RecyclerView);
-        photoGroup_RecyclerView.setLayoutManager(new GridLayoutManager(getApplicationContext(), 2));
-        adapter = new Adapter(images, (image) -> {
-            Intent intent = new Intent(this, PhotoActivity.class);
-            intent.putExtra("Image", image);
-            startActivity(intent);
-        });
-
-        photoGroup_RecyclerView.setAdapter(adapter);
-        photoGroup_RecyclerView.addItemDecoration(new AllRecyclerViewDecoration(10));
     }
 
     class Adapter extends RecyclerView.Adapter<Adapter.ViewHolder>{
