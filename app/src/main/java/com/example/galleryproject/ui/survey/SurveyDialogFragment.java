@@ -27,7 +27,7 @@ import java.util.List;
 
 public class SurveyDialogFragment extends DialogFragment implements SurveyAdapter.StartDragListener{
     private TextView survey_textView;
-    private ImageButton survey_complete_button;
+    private ImageButton survey_check_button;
     private RecyclerView survey_recyclerView;
 
     private SurveyAdapter adapter;
@@ -65,12 +65,12 @@ public class SurveyDialogFragment extends DialogFragment implements SurveyAdapte
         builder.setView(view);
 
         survey_textView = view.findViewById(R.id.survey_textView);
-        survey_complete_button = view.findViewById(R.id.survey_complete_button);
+        survey_check_button = view.findViewById(R.id.survey_complete_button);
 
         Dialog dialog = builder.create();
         dialog.setCanceledOnTouchOutside(false);
 
-        survey_complete_button.setOnClickListener((v) -> {
+        survey_check_button.setOnClickListener((v) -> {
             listener.OnSurveyClick(categories);
             this.dismiss();
         });

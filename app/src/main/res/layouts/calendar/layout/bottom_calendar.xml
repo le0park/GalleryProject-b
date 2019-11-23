@@ -6,9 +6,8 @@
     android:background="@drawable/bottom_calendar_circular"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingRight="40dp"
-    android:paddingLeft="40dp"
-    >
+    android:paddingLeft="@dimen/bottomCalendar_paddingLeftRight"
+    android:paddingRight="@dimen/bottomCalendar_paddingLeftRight" >
 <!--    android:elevation="10dp"-->
 
         <LinearLayout
@@ -16,16 +15,15 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:orientation="horizontal"
-            android:layout_marginBottom="10dp">
+            android:layout_marginBottom="@dimen/bottomCalendar_year_marginBottom">
 
             <ImageButton
                 android:id="@+id/bottomCalendar_yearLeftButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="@dimen/bottomCalendar_yearButton_width"
+                android:layout_height="@dimen/bottomCalendar_yearButton_height"
                 android:layout_gravity="center"
-                android:background="#FFFAFAFA"
-                android:src="@drawable/calendar_left_icon"
-                android:text="" />
+                android:background="@color/mainWhite"
+                android:src="@drawable/calendar_left_icon"/>
 
             <TextView
                 android:id="@+id/bottom_YearTextView"
@@ -39,12 +37,11 @@
 
             <ImageButton
                 android:id="@+id/bottomCalendar_yearRightButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="@dimen/bottomCalendar_yearButton_width"
+                android:layout_height="@dimen/bottomCalendar_yearButton_height"
                 android:layout_gravity="center"
-                android:background="#FFFAFAFA"
-                android:src="@drawable/calendar_right_icon"
-                android:text="" />
+                android:background="@color/mainWhite"
+                android:src="@drawable/calendar_right_icon"/>
 
         </LinearLayout>
 
@@ -52,7 +49,7 @@
             android:id="@+id/monthRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
+            android:layout_marginBottom="@dimen/bottomCalendar_recyclerView_marginBottom"
             android:scrollbars="vertical"
             app:layoutManager="GridLayoutManager" />
 

@@ -218,8 +218,9 @@ public class TimeLineFragment extends Fragment {
                             }
 
                             objectPriority.set(4, Category.ETC);
-
-
+                            int[] priority = objectPriority.stream()
+                                    .mapToInt(Integer::intValue)
+                                    .toArray();
                             ImageGroupLabelAnalyzer.setLabelPriority(priority);
 
                             if (partedImages.size() > 0) {
@@ -522,16 +523,17 @@ public class TimeLineFragment extends Fragment {
                 DeepLearningModel model = new DeepLearningModel(getActivity());
                 Interpreter tf_lite = model.getTfliteInterpreter("kanghee_model.tflite");
 
+                Log.e("getXSize : ", analyzer.getX().size() + "");
                 float[][][] input = model.parseModelInput(analyzer.getX());
                 float[][] priority = new float[input.length][1];
 
                 tf_lite.run(input, priority);
 
                 for(int i=0;i<input.length;i++)
-                    Log.e("PRIORITY : ", "size : " + input.length + "  /  " + priority[i][0] + "");
+                    Log.e("PRIORITY : ", "size : " + input.length + " == " + priority.length + "  /  " + priority[i][0] + "");
 
                 List<Image> images = result.getGroups().get(0).getImages();
-                List<Image> repImages = model.getRepImages(result, priority);
+                List<Image> repImages = model.getRepImages(analyzer.getRepImageCandidate(), priority);
 
                 result.setRepImages(repImages);
                 
@@ -632,6 +634,7 @@ public class TimeLineFragment extends Fragment {
 
             List<Image> inputImages = Arrays.asList(images);
 
+            // 일정 시간 단위로 나눔
             TimeGroupAlgorithm algorithm = new TimeGroupAlgorithm();
             List<ImageGroup> processedGroups = algorithm.processImages(inputImages);
 
@@ -646,13 +649,6 @@ public class TimeLineFragment extends Fragment {
             int groupsCount = groups.size();
             latch = new CountDownLatch(groupsCount);
 
-//            for (ImageGroup group: groups) {
-////            // 현재 남은 이미지 갯수 측정
-////            int allImageCount = 0;
-////            for (ImageGroup group : groups) {
-////                allImageCount = group.getImages().size();
-////            }
-////            restImageCount -= allImageCount;
 
             for (ImageGroup group : groups) {
                 // 시간 그룹 내에서 유사도 클러스터링 실행

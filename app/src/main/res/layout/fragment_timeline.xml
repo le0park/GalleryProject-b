@@ -3,31 +3,29 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    >
+    android:orientation="vertical" >
 
     <com.example.galleryproject.TopCalendarLayout
         android:id="@+id/topCalendar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginBottom="@dimen/topCalendar_marginBottom"/>
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        >
+        android:layout_height="wrap_content" >
 
         <xyz.sangcomz.stickytimelineview.TimeLineRecyclerView
             android:id="@+id/timeLineRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
-            android:background="#F2F2F2"
-            app:sectionBackgroundColor="#F2F2F2"
+            android:background="@color/mainGray"
+            app:sectionBackgroundColor="@color/mainGray"
             app:customDotDrawable="@drawable/dot"
-            app:timeLineColor="#B5B5B5"
-            app:timeLineWidth="2dp" />
+            app:timeLineColor="@color/color_timeLine_line"
+            app:timeLineWidth="@dimen/timeLine_line_width" />
 
         <com.example.galleryproject.BottomCalendarLayout
             android:id="@+id/bottomCalendar"

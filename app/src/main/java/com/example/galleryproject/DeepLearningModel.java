@@ -60,7 +60,7 @@ public class DeepLearningModel {
     }
 
 
-    public List<Image> getRepImages(ImageCollection result, float[][] priority) {
+    public List<Image> getRepImages(List<Image> images, float[][] priority) {
         // priority[i][0];
         List<Image> all_imagesInTimeLine = new ArrayList<>();
 
@@ -68,23 +68,21 @@ public class DeepLearningModel {
         Map<Float, Image> hash = new HashMap<>();
 
         int priorityInx = 0;
-        for(int imageGroupInx = 0; imageGroupInx < result.getGroups().size(); imageGroupInx++){
-            ImageGroup ig = result.getGroups().get(imageGroupInx);
-            for(int imageInx = 0; imageInx < ig.getImages().size(); imageInx++){
-                Image im = ig.getImages().get(imageInx);
-                hash.put(priority[priorityInx][0], im);
-                priorityInx++;
-                if(priorityInx == priority.length)
-                    break;
-            }
-            if(priorityInx == priority.length)
-                break;
+
+        for(Image image : images){
+            hash.put(priority[priorityInx][0], image);
+            priorityInx++;
         }
 
         List<Float> priorities = new ArrayList<>(hash.keySet());
         Collections.sort(priorities, Collections.reverseOrder());
-        for(float p : priorities)
+
+        Log.e("SORTED_SIZE : ", priorities.size() + "");
+
+        for(float p : priorities) {
             Log.e("SORTED_PRIORITY : ", p + " " + hash.get(p));
+            repImages.add(hash.get(p));
+        }
 
         return repImages;
     }

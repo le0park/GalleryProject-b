@@ -1,28 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="160dp"
-    android:layout_height="50dp"
-    android:background="#FFFAFAFA"
+    android:layout_width="@dimen/survey_item_width"
+    android:layout_height="@dimen/survey_item_height"
+    android:background="@color/mainWhite"
     android:orientation="horizontal">
 
     <TextView
         android:id="@+id/survey_item_textView"
-        android:layout_width="120dp"
+        android:layout_width="@dimen/survey_itemText_width"
         android:layout_height="match_parent"
         android:layout_gravity="left|center_vertical"
         android:gravity="left|center_vertical"
-        android:background="#FFFAFAFA"
-        android:text="example"
-        android:paddingLeft="10dp" />
+        android:background="@color/mainWhite"
+        android:text="@string/example_Text"
+        android:paddingLeft="@dimen/survey_item_padding" />
 
     <ImageButton
         android:id="@+id/survey_item_button"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="@dimen/survey_scrollButton_width"
+        android:layout_height="@dimen/survey_scrollButton_height"
         android:layout_gravity="center_vertical"
-        android:background="#FFFAFAFA"
+        android:background="@color/mainWhite"
         android:scaleType="fitXY"
         android:src="@drawable/survey_scroll_button" />
 

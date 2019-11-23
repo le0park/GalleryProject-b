@@ -9,7 +9,7 @@
         android:id="@+id/topCalendar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp" />
+        android:layout_marginBottom="@dimen/topCalendar_marginBottom" />
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -19,9 +19,9 @@
             android:id="@+id/allRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="#F2F2F2"
-            android:paddingLeft="3dp"
-            android:paddingRight="3dp"
+            android:background="@color/mainGray"
+            android:paddingLeft="@dimen/allPhoto_padding"
+            android:paddingRight="@dimen/allPhoto_padding"
             android:scrollbars="vertical"
             app:layoutManager="GridLayoutManager" />
 

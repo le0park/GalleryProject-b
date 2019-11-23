@@ -2,12 +2,9 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    style="@style/TimeLine_speechBubble"
     android:orientation="vertical"
-    android:background="@drawable/speech_bubble"
-    android:paddingLeft="20dp"
-    android:paddingRight="10dp"
-    android:paddingTop="10dp"
-    android:paddingBottom="10dp">
+    >
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/timeLine_Image_RecyclerView"
@@ -23,8 +20,8 @@
             android:id="@+id/timeLineMemo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="memo...."
-            android:textSize="20dp" />
+            android:text="@string/example_Text"
+            android:textSize="@dimen/timeLine_textSize" />
     </LinearLayout>
 
 </LinearLayout>

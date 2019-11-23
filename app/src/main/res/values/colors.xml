@@ -3,4 +3,14 @@
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
+
+    <color name="mainWhite">#FFFAFAFA</color>
+    <color name="mainGray">#F2F2F2</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
+
+    <color name="colorMemo">#ECE0AC</color>
+    <color name="color_timeLine_line">#B5B5B5</color>
+    <color name="color_timeLine_dot">#38B9C8</color>
+    <color name="survey_checkButton">#006FEF</color>
 </resources>

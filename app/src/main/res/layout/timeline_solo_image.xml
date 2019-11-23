@@ -3,13 +3,12 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    >
+    android:layout_height="wrap_content" >
 
     <ImageView
         android:id="@+id/timeLine_solo_ImageView"
-        android:layout_width="85dp"
-        android:layout_height="85dp"
+        android:layout_width="@dimen/timeLine_image_width"
+        android:layout_height="@dimen/timeLine_image_height"
         android:adjustViewBounds="true"
         android:scaleType="centerCrop" />
 

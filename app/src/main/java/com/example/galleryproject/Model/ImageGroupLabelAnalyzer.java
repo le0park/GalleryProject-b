@@ -21,7 +21,8 @@ public class ImageGroupLabelAnalyzer {
 
     private boolean analyzed = false;
 
-    public ImageGroupLabelAnalyzer() { }
+    public ImageGroupLabelAnalyzer() {
+    }
 
     public void setGroups(List<ImageGroup> all) {
         this.all = all;
@@ -52,14 +53,14 @@ public class ImageGroupLabelAnalyzer {
         this.labelCounters = new ArrayList<>();
 
         // 그룹 내 전체 이미지 라벨 그룹당 데이터 장수 카운팅
-        for (List<LabelGroup> labelGroups: allLabelGroups) {
+        for (List<LabelGroup> labelGroups : allLabelGroups) {
             this.labelCounters.add(
                     LabelCounter.getCount(labelGroups));
         }
 
         // 전체 이미지 장수
         this.allImageCount = 0;
-        for (ImageGroup group: this.all) {
+        for (ImageGroup group : this.all) {
             this.allImageCount += group
                     .getImages()
                     .size();
@@ -67,7 +68,7 @@ public class ImageGroupLabelAnalyzer {
 
 
         this.inputsByCategory = new ArrayList<>();
-        for (List<LabelGroup> group: allLabelGroups) {
+        for (List<LabelGroup> group : allLabelGroups) {
             inputsByCategory.add(new HashMap());
         }
 
@@ -80,7 +81,7 @@ public class ImageGroupLabelAnalyzer {
         X = new ArrayList<>();
 
         int[] totalCountByLabel = new int[5];
-        for (int[] labelCounter: labelCounters) {
+        for (int[] labelCounter : labelCounters) {
             totalCountByLabel[Category.PERSON] += labelCounter[Category.PERSON];
             totalCountByLabel[Category.FOOD] += labelCounter[Category.FOOD];
             totalCountByLabel[Category.PET] += labelCounter[Category.PET];
@@ -108,12 +109,10 @@ public class ImageGroupLabelAnalyzer {
                  */
                 double averageInCategory = (double) labelCounter[cIdx] / (double) totalCountByLabel[cIdx];
 
-
                 /**
                  * 유사 그룹 내 대표 레이블 사진 장수 / 유사 그룹 사진 장수
                  */
                 double averageInGroup = (double) labelCounter[cIdx] / (double) group.getImages().size();
-
 
                 /**
                  * Label 우선순위에 따른 cost function 값
@@ -121,21 +120,55 @@ public class ImageGroupLabelAnalyzer {
                 double labelScore = (double) 5 - labelPriority[cIdx];
                 inputsByCategory.get(groupIdx);
 
-                double[] x = new double[]{ bias, averageInCategory, averageInGroup, labelScore };
-                X.add(x);
+                double[] x = new double[]{bias, averageInCategory, averageInGroup, labelScore};
+
+                for(int i=0;i<labelCounter[cIdx]; i++)
+                    X.add(x);
 
 //                Log.e("ANALYZER", String.format("X [%d]: %f, %f, %f, %f", cIdx, x[0], x[1], x[2], x[3]));
                 inputsByCategory.get(groupIdx)
-                                .put(cIdx, x);
+                        .put(cIdx, x);
             }
         }
 
         this.analyzed = true;
     }
 
+    public List<Image> getRepImageCandidate() {
+        List<Image> candidates = new ArrayList<>();
+
+        for (int groupIdx = 0; groupIdx < this.all.size(); groupIdx++) {
+            ImageGroup group = this.all.get(groupIdx);
+
+            int inGroupImageIdx = 0;
+
+            List<LabelGroup> group_LabelGroup = allLabelGroups.get(groupIdx);
+
+            int[] labelCounter = this.labelCounters.get(groupIdx);
+
+            for (int cIdx = 0; cIdx < 5; cIdx++) {
+                // label이 존재하지 않으면 생략
+                if (labelCounter[cIdx] == 0) {
+                    continue;
+                }
+
+                for(LabelGroup lg : group_LabelGroup){
+                    if(cIdx == LabelCounter.getCategory(lg.getLabels())) {
+                        candidates.add(group.getImages().get(inGroupImageIdx));
+                    }
+                    inGroupImageIdx++;
+                }
+                Log.e("IMAGE_GROUP_SIZE : ", "cidx : " + cIdx + "  " + inGroupImageIdx + " == " + group_LabelGroup.size());
+                inGroupImageIdx = 0;
+            }
+        }
+
+        return candidates;
+    }
+
     public List<double[]> getX() {
         if (this.analyzed) {
-             return this.X;
+            return this.X;
         }
 
         Log.e("IMAGE_GROUP_LABEL_ANALYZER", "not analyzed");
@@ -190,9 +223,9 @@ public class ImageGroupLabelAnalyzer {
 
         StringBuffer sb = new StringBuffer();
         sb.append("{ \n");
-        for (double[] element: X) {
+        for (double[] element : X) {
             sb.append("  { ");
-            for (double ex: element) {
+            for (double ex : element) {
                 sb.append(ex);
                 sb.append(", ");
             }

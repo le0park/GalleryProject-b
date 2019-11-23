@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFAFAFA"
+    android:background="@color/mainWhite"
     android:orientation="vertical">
 
     <LinearLayout
@@ -12,17 +12,17 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="50dp"
+            android:layout_height="wrap_content"
             android:layout_weight="10"
-            android:background="#FFFAFAFA"
+            android:background="@color/mainWhite"
             android:orientation="horizontal">
 
             <ImageButton
                 android:id="@+id/photoGroup_backButton"
-                android:layout_width="30dp"
-                android:layout_height="40dp"
+                android:layout_width="@dimen/backButton_width"
+                android:layout_height="@dimen/backButton_height"
                 android:layout_gravity="center_vertical"
-                android:background="#FFFAFAFA"
+                android:background="@color/mainWhite"
                 android:scaleType="fitXY"
                 android:src="@drawable/calendar_left_icon" />
 
@@ -30,10 +30,10 @@
                 android:id="@+id/photoGroup_date_textView"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:background="#FFFAFAFA"
-                android:text="2018-09-10"
-                android:textSize="30dp" />
+                android:layout_gravity="center_vertical"
+                android:background="@color/mainWhite"
+                android:text="@string/example_Date"
+                android:textSize="@dimen/topDate_textSize" />
 
         </LinearLayout>
 
@@ -46,11 +46,11 @@
 
             <ImageButton
                 android:id="@+id/saveButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="#FFFAFAFA"
-                android:src="@drawable/save_button"
-                android:text="저장"
+                android:layout_width="@dimen/saveButton_width"
+                android:layout_height="@dimen/saveButton_height"
+                android:background="@color/mainWhite"
+                android:src="@drawable/comment"
+                android:scaleType="fitCenter"
                 android:visibility="gone" />
         </LinearLayout>
 
@@ -61,28 +61,28 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="3"
-        android:background="#F2F2F2" />
+        android:background="@color/mainGray" />
 
     <TextView
         android:id="@+id/photoGroup_Memo_textView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_margin="10dp"
+        android:layout_margin="@dimen/memo_margin"
         android:layout_weight="2"
-        android:background="#ECE0AC"
+        android:background="@color/colorMemo"
         android:gravity="left|top"
-        android:padding="10dp"
+        android:padding="@dimen/memo_padding"
         android:visibility="visible" />
 
     <EditText
         android:id="@+id/photoGroup_Memo_editText"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_margin="10dp"
+        android:layout_margin="@dimen/memo_margin"
         android:layout_weight="2"
-        android:background="#ECE0AC"
+        android:background="@color/colorMemo"
         android:gravity="left|top"
-        android:padding="10dp"
+        android:padding="@dimen/memo_padding"
         android:visibility="gone" />
 
 </LinearLayout>

@@ -4,4 +4,59 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="custom_profile_image">50dp</dimen>
     <dimen name="custom_profile_padding">2dp</dimen>
+
+<!--    textSize   -->
+    <dimen name="topDate_textSize">30dp</dimen>
+    <dimen name="topCalendar_year_textSize">14dp</dimen>
+    <dimen name="topCalendar_month_textSize">24dp</dimen>
+    <dimen name="bottomCalendar_month_textSize">16dp</dimen>
+    <dimen name="mapMarker_textSize">14dp</dimen>
+    <dimen name="survey_title_textSize">24dp</dimen>
+    <dimen name="timeLine_textSize">20dp</dimen>
+
+<!--    width & height   -->
+    <dimen name="bottomNavigation_icon_width">24dp</dimen>
+    <dimen name="bottomNavigation_icon_height">24dp</dimen>
+    <dimen name="timeLine_dot_width">20dp</dimen>
+    <dimen name="timeLine_dot_height">20dp</dimen>
+
+    <dimen name="backButton_width">30dp</dimen>
+    <dimen name="backButton_height">50dp</dimen>
+    <dimen name="saveButton_width">40dp</dimen>
+    <dimen name="saveButton_height">40dp</dimen>
+    <dimen name="bottomCalendar_yearButton_width">18dp</dimen>
+    <dimen name="bottomCalendar_yearButton_height">18dp</dimen>
+    <dimen name="timeLine_line_width">2dp</dimen>
+    <dimen name="mapMarker_image_width">50dp</dimen>
+    <dimen name="mapMarker_image_height">50dp</dimen>
+
+    <dimen name="surveyTitle_height">60dp</dimen>
+    <dimen name="surveyOrder_width">20dp</dimen>
+    <dimen name="surveyOrder_height">50dp</dimen>
+    <dimen name="survey_checkButton_width">50dp</dimen>
+    <dimen name="survey_checkButton_height">50dp</dimen>
+    <dimen name="survey_recyclerView_width">160dp</dimen>
+    <dimen name="survey_recyclerView_height">200dp</dimen>
+    <dimen name="survey_scrollButton_width">40dp</dimen>
+    <dimen name="survey_scrollButton_height">40dp</dimen>
+    <dimen name="survey_itemText_width">120dp</dimen>
+    <dimen name="survey_item_width">160dp</dimen>
+    <dimen name="survey_item_height">50dp</dimen>
+    <dimen name="timeLine_image_width">85dp</dimen>
+    <dimen name="timeLine_image_height">85dp</dimen>
+
+<!--    margin & padding    -->
+    <dimen name="memo_padding">10dp</dimen>
+    <dimen name="memo_margin">10dp</dimen>
+    <dimen name="bottomCalendar_paddingLeftRight">40dp</dimen>
+    <dimen name="bottomCalendar_year_marginBottom">10dp</dimen>
+    <dimen name="bottomCalendar_recyclerView_marginBottom">20dp</dimen>
+    <dimen name="bottomCalendar_monthItem_marginTopBottom">10dp</dimen>
+    <dimen name="topCalendar_marginBottom">8dp</dimen>
+    <dimen name="allPhoto_padding">3dp</dimen>
+    <dimen name="mapMarker_bubble_smallPadding">3dp</dimen>
+    <dimen name="mapMarker_bubble_bigPadding">13dp</dimen>
+    <dimen name="survey_item_padding">10dp</dimen>
+    <dimen name="timeLine_speechBubble_smallPadding">10dp</dimen>
+    <dimen name="timeLine_speechBubble_bigPadding">20dp</dimen>
 </resources>

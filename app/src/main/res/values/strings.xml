@@ -8,4 +8,9 @@
     <!--    <string name="title_home">Home</string>-->
     <!--    <string name="title_dashboard">Dashboard</string>-->
     <!--    <string name="title_notifications">Notifications</string>-->
+
+    <string name="example_Date">YYYY-MM-DD</string>
+    <string name="example_Text">Example Text</string>
+
+    <string name="survey_title">좋아하는 순으로 정렬!</string>
 </resources>

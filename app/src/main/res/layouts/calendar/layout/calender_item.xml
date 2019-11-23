@@ -3,16 +3,15 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="10dp"
-    android:layout_marginTop="10dp"
-    >
+    android:layout_marginTop="@dimen/bottomCalendar_monthItem_marginTopBottom"
+    android:layout_marginBottom="@dimen/bottomCalendar_monthItem_marginTopBottom" >
 
     <TextView
         android:id="@+id/calendarItem"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:text="TextView"
-        android:textSize="16dp" />
+        android:text="@string/example_Text"
+        android:textSize="@dimen/bottomCalendar_month_textSize" />
 
 </LinearLayout>

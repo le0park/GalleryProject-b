@@ -1,5 +1,4 @@
 <resources>
-
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
@@ -8,6 +7,36 @@
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:statusBarColor">#FAFAFA</item>
         <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+    <style name="SurveyTitle">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">@dimen/surveyTitle_height</item>
+        <item name="android:text">@string/survey_title</item>
+        <item name="android:textSize">@dimen/survey_title_textSize</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="SurveyOrder">
+        <item name="android:layout_width">@dimen/surveyOrder_width</item>
+        <item name="android:layout_height">@dimen/surveyOrder_height</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="SurveyCheckButton">
+        <item name="android:layout_width">@dimen/survey_checkButton_width</item>
+        <item name="android:layout_height">@dimen/survey_checkButton_height</item>
+        <item name="android:src">@drawable/survey_check_button</item>
+        <item name="android:scaleType">fitXY</item>
+        <item name="android:background">@color/mainWhite</item>
+    </style>
+
+    <style name="TimeLine_speechBubble">
+        <item name="android:background">@drawable/speech_bubble</item>
+        <item name="android:paddingLeft">@dimen/timeLine_speechBubble_bigPadding</item>
+        <item name="android:paddingRight">@dimen/timeLine_speechBubble_smallPadding</item>
+        <item name="android:paddingTop">@dimen/timeLine_speechBubble_smallPadding</item>
+        <item name="android:paddingBottom">@dimen/timeLine_speechBubble_smallPadding</item>
     </style>
 
 </resources>

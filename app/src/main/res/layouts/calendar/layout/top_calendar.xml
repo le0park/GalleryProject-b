@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:text="XXXX년"
-        android:textSize="14dp"
+        android:textSize="@dimen/topCalendar_year_textSize"
         android:textStyle="bold"/>
 
     <LinearLayout
@@ -26,7 +26,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="X월"
-            android:textSize="24dp"
+            android:textSize="@dimen/topCalendar_month_textSize"
             android:textStyle="bold"/>
 
         <ImageButton
@@ -35,9 +35,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_gravity="center"
-            android:background="#FFFAFAFA"
-            android:src="@drawable/calendar_down_icon"
-            android:text="" />
+            android:background="@color/mainWhite"
+            android:src="@drawable/calendar_down_icon" />
     </LinearLayout>
 
 </LinearLayout>
