@@ -67,12 +67,11 @@ public class TopCalendarLayout extends LinearLayout {
     }
 
     public void buttonChange(){
-        Context context = getContext();
-        if(isExpanded){
-            showCalendarButton.setImageResource(R.drawable.calendar_down_icon);
+        if (isExpanded) {
+            showCalendarButton.setImageResource(R.drawable.icons8_expand_arrow_50);
             isExpanded = false;
-        }else{
-            showCalendarButton.setImageResource(R.drawable.calendar_up_icon);
+        } else {
+            showCalendarButton.setImageResource(R.drawable.icons8_collapse_arrow_50);
             isExpanded = true;
         }
     }
@@ -82,7 +81,7 @@ public class TopCalendarLayout extends LinearLayout {
     }
 
     public void setMonthTextView(String month){
-        monthTextView.setText(month+"월");
+        monthTextView.setText(month + "월");
     }
 
     public void setOnExpandListener(OnExpandListener listener){

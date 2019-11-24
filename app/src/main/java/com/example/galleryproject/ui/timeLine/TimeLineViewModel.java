@@ -30,9 +30,4 @@ public class TimeLineViewModel extends ViewModel {
     public void insertAll(List<ImageCollection> items) {
         imageCollections.addAll(items);
     }
-
-    private void loadImageGroups() {
-
-        // Todo: imageGroups를 가져오기 위한 비동기 코드 구현 필요함.
-    }
 }
