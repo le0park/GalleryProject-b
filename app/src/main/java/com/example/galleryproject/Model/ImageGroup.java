@@ -41,7 +41,6 @@ public abstract class ImageGroup implements Parcelable {
         this.images = images;
     }
 
-
     public LocalDateTime getDate() {
         return getStartDate();
     }
