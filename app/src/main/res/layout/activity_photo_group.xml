@@ -1,88 +1,113 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/mainWhite"
     android:orientation="vertical">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:layout_height="0dp"
+        android:layout_weight="10">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/constraintLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="10"
-            android:background="@color/mainWhite"
-            android:orientation="horizontal">
+            app:layout_constraintTop_toTopOf="parent">
 
             <ImageButton
                 android:id="@+id/photoGroup_backButton"
-                android:layout_width="@dimen/backButton_width"
-                android:layout_height="@dimen/backButton_height"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
                 android:layout_gravity="center_vertical"
                 android:background="@color/mainWhite"
+                android:padding="8dp"
                 android:scaleType="fitXY"
-                android:src="@drawable/calendar_left_icon" />
+                android:src="@drawable/icons8_chevron_left_50"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
                 android:id="@+id/photoGroup_date_textView"
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:background="@color/mainWhite"
                 android:text="@string/example_Date"
-                android:textSize="@dimen/topDate_textSize" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="50dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="right|center_vertical"
-            android:layout_marginRight="10dp"
-            android:layout_weight="1">
+                android:textSize="20sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/photoGroup_backButton"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <ImageButton
                 android:id="@+id/saveButton"
                 android:layout_width="@dimen/saveButton_width"
                 android:layout_height="@dimen/saveButton_height"
                 android:background="@color/mainWhite"
-                android:src="@drawable/comment"
+                android:padding="8dp"
                 android:scaleType="fitCenter"
-                android:visibility="gone" />
-        </LinearLayout>
+                android:src="@drawable/comment"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-    </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/photoGroup_RecyclerView"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/photoGroup_RecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="3"
+            android:background="@color/mainGray"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/constraintLayout">
+
+        </androidx.recyclerview.widget.RecyclerView>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="3"
-        android:background="@color/mainGray" />
+        android:layout_height="120dp">
 
-    <TextView
-        android:id="@+id/photoGroup_Memo_textView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_margin="@dimen/memo_margin"
-        android:layout_weight="2"
-        android:background="@color/colorMemo"
-        android:gravity="left|top"
-        android:padding="@dimen/memo_padding"
-        android:visibility="visible" />
+        <TextView
+            android:id="@+id/photoGroup_Memo_textView"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:layout_margin="10dp"
+            android:layout_weight="0"
+            android:background="@color/colorMemo"
+            android:gravity="start|top"
+            android:padding="@dimen/memo_padding"
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <EditText
-        android:id="@+id/photoGroup_Memo_editText"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_margin="@dimen/memo_margin"
-        android:layout_weight="2"
-        android:background="@color/colorMemo"
-        android:gravity="left|top"
-        android:padding="@dimen/memo_padding"
-        android:visibility="gone" />
+        <EditText
+            android:id="@+id/photoGroup_Memo_editText"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_margin="10dp"
+            android:layout_weight="2"
+            android:background="@color/colorMemo"
+            android:gravity="start|top"
+            android:inputType="textMultiLine|text"
+            android:padding="@dimen/memo_padding"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </LinearLayout>
