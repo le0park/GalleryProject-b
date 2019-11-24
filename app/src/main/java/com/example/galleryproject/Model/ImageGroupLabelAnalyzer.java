@@ -68,7 +68,7 @@ public class ImageGroupLabelAnalyzer {
 
 
         this.inputsByCategory = new ArrayList<>();
-        for (List<LabelGroup> group : allLabelGroups) {
+        for (int i = 0; i < allLabelGroups.size(); i++) {
             inputsByCategory.add(new HashMap());
         }
 

@@ -38,8 +38,6 @@ public class SimGroupAlgorithm implements IGroupAlgorithm {
 
         List<Cluster> clusters = dbscan.getClusters();
         for (Cluster c: clusters) {
-            Log.e("SIM_GROUP_ALGORITHM", c.toString());
-
             groups.add(new UnitImageGroup());
             ImageGroup group = groups.get(groups.size() - 1);
 
