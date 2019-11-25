@@ -96,8 +96,6 @@ public abstract class Image implements Parcelable {
 
         if (o instanceof File) {
             File f = (File) o;
-            Log.e("Image", f.toPath().toString());
-            Log.e("Image", this.file.toPath().toString());
             return this.file.equals(f);
         }
 

@@ -5,8 +5,6 @@ import android.content.res.AssetFileDescriptor;
 import android.util.Log;
 
 import com.example.galleryproject.Model.Image;
-import com.example.galleryproject.Model.ImageCollection;
-import com.example.galleryproject.Model.ImageGroup;
 
 import org.tensorflow.lite.Interpreter;
 
@@ -19,7 +17,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class DeepLearningModel {
     private Activity activity;
@@ -62,8 +59,6 @@ public class DeepLearningModel {
 
     public List<Image> getRepImages(List<Image> images, float[][] priority) {
         // priority[i][0];
-        List<Image> all_imagesInTimeLine = new ArrayList<>();
-
         List<Image> repImages = new ArrayList<>();
         Map<Float, Image> hash = new HashMap<>();
 
@@ -77,10 +72,7 @@ public class DeepLearningModel {
         List<Float> priorities = new ArrayList<>(hash.keySet());
         Collections.sort(priorities, Collections.reverseOrder());
 
-        Log.e("SORTED_SIZE : ", priorities.size() + "");
-
-        for(float p : priorities) {
-            Log.e("SORTED_PRIORITY : ", p + " " + hash.get(p));
+        for (float p: priorities) {
             repImages.add(hash.get(p));
         }
 
