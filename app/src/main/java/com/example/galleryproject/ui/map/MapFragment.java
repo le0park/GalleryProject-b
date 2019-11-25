@@ -1,10 +1,6 @@
 package com.example.galleryproject.ui.map;
 
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.PorterDuff;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
@@ -27,6 +23,7 @@ import com.bumptech.glide.request.transition.Transition;
 
 import com.example.galleryproject.Database.AppDatabase;
 import com.example.galleryproject.Database.AppExecutors;
+import com.example.galleryproject.ImageCollectionViewModel;
 import com.example.galleryproject.Model.Image;
 import com.example.galleryproject.Model.ImageCollection;
 import com.example.galleryproject.R;
@@ -58,7 +55,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                                                      ClusterManager.OnClusterItemInfoWindowClickListener<MarkerItem> {
     private GoogleMap mMap;
     private ClusterManager<MarkerItem> mClusterManager;
-    private MapViewModel mapViewModel;
+    private ImageCollectionViewModel collectionViewModel;
 
     AppDatabase mDb;
     List<ImageCollection> collections;
@@ -68,7 +65,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         View root = inflater.inflate(R.layout.fragment_map, container, false);
         setUpMap();
 
-        mapViewModel = ViewModelProviders.of(this).get(MapViewModel.class);
+        collectionViewModel = ViewModelProviders.of(getActivity()).get(ImageCollectionViewModel.class);
         mDb = AppDatabase.getInstance(getContext());
         collections = new ArrayList<>();
         return root;
@@ -276,12 +273,12 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                         size = clist.size();
                         offset += size;
                         if (size > 0) {
-                            AppExecutors.getInstance().mainThread().execute(() -> mapViewModel.insertAll(clist));
+                            AppExecutors.getInstance().mainThread().execute(() -> collectionViewModel.insertAll(clist));
                         }
                     }
                 });
 
-        mapViewModel.getImageCollections().observe(this, (collections) -> {
+        collectionViewModel.getImageCollections().observe(this, (collections) -> {
             getMap().clear();
             mClusterManager.clearItems();
 
