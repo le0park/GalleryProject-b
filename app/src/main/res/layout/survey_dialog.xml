@@ -14,7 +14,8 @@
             android:id="@+id/survey_textView"
             android:layout_gravity="center"
             android:gravity="center"
-            style="@style/SurveyTitle"/>
+            style="@style/SurveyTitle"
+            />
 
     </LinearLayout>
 
