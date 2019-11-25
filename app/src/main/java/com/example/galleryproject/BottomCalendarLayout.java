@@ -122,7 +122,19 @@ public class BottomCalendarLayout extends LinearLayout {
             bottom_YearEditText.setVisibility(View.GONE);
             bottomCalendar_yearSaveButton.setVisibility(View.GONE);
 
-            bottom_YearTextView.setText(bottom_YearEditText.getText().toString());
+            Date currentTime = Calendar.getInstance().getTime();
+            SimpleDateFormat yearFormat = new SimpleDateFormat("yyyy", Locale.getDefault());
+            int cur_year = Integer.parseInt(yearFormat.format(currentTime));
+
+            int input_year = Integer.parseInt(bottom_YearEditText.getText().toString());
+
+            if(cur_year >= input_year){
+                bottom_YearTextView.setText(bottom_YearEditText.getText().toString());
+            }else{ // 지금보다 큰 year 입력 시 처리
+                bottom_YearTextView.setText(yearFormat.format(currentTime));
+                bottom_YearEditText.setText(yearFormat.format(currentTime));
+            }
+
             bottom_YearEditText.clearFocus();
             imm.hideSoftInputFromWindow(bottom_YearEditText.getWindowToken(), 0);
         });

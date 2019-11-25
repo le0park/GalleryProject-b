@@ -1,8 +1,11 @@
 package com.example.galleryproject;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -56,6 +59,12 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     System.exit(-1);// permission denied, boo! Disable the
                     // functionality that depends on this permission.
+//                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).setData(Uri.parse("package:" + BuildConfig.APPLICATION_ID));
+//                    intent.addCategory(Intent.CATEGORY_DEFAULT);
+//                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//                    intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+//                    intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+//                    startActivityForResult(intent, 1000);
                 }
                 return;
             }
