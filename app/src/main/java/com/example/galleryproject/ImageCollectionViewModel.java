@@ -1,17 +1,18 @@
-package com.example.galleryproject.ui.timeLine;
+package com.example.galleryproject;
 
 import androidx.lifecycle.ViewModel;
 
+import com.example.galleryproject.Model.ImageCollection;
+import com.example.galleryproject.ui.timeLine.ImageCollectionLiveData;
+
 import java.util.List;
 
-import com.example.galleryproject.Model.ImageCollection;
-
-public class TimeLineViewModel extends ViewModel {
+public class ImageCollectionViewModel extends ViewModel {
     private volatile ImageCollectionLiveData imageCollections;
 
     public ImageCollectionLiveData getImageCollections() {
         if (imageCollections == null) {
-            synchronized (TimeLineViewModel.class) {
+            synchronized (ImageCollectionViewModel.class) {
                 if (imageCollections == null) {
                     imageCollections = new ImageCollectionLiveData();
                 }
