@@ -12,28 +12,26 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-
 import androidx.lifecycle.ViewModelProviders;
 
 import com.bumptech.glide.Glide;
-
-import com.bumptech.glide.RequestBuilder;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
-import com.bumptech.glide.request.target.CustomTarget;
-
 import com.bumptech.glide.request.target.SimpleTarget;
-import com.bumptech.glide.request.target.SizeReadyCallback;
-import com.bumptech.glide.request.target.Target;
 import com.bumptech.glide.request.transition.Transition;
+
+import com.example.galleryproject.Database.AppDatabase;
+import com.example.galleryproject.Database.AppExecutors;
+import com.example.galleryproject.Model.Image;
+import com.example.galleryproject.Model.ImageCollection;
 import com.example.galleryproject.R;
+import com.example.galleryproject.Util.DatabaseUtils;
+
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -43,49 +41,36 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+
 import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterItem;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.google.maps.android.ui.IconGenerator;
 
-import org.w3c.dom.Text;
-
-import java.io.File;
-import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-import java.util.concurrent.ExecutionException;
 
-public class MapFragment extends Fragment implements OnMapReadyCallback, ClusterManager.OnClusterClickListener<MarkerItem>, ClusterManager.OnClusterInfoWindowClickListener<MarkerItem>, ClusterManager.OnClusterItemClickListener<MarkerItem>, ClusterManager.OnClusterItemInfoWindowClickListener<MarkerItem> {
-    private MapViewModel mapViewModel;
-
+public class MapFragment extends Fragment implements OnMapReadyCallback,
+                                                     ClusterManager.OnClusterClickListener<MarkerItem>,
+                                                     ClusterManager.OnClusterInfoWindowClickListener<MarkerItem>,
+                                                     ClusterManager.OnClusterItemClickListener<MarkerItem>,
+                                                     ClusterManager.OnClusterItemInfoWindowClickListener<MarkerItem> {
     private GoogleMap mMap;
     private ClusterManager<MarkerItem> mClusterManager;
-    private Random mRandom = new Random(1984);
+    private MapViewModel mapViewModel;
 
-//    private View marker_root_view;
-//    private TextView mapMarker_textView;
-//    private ImageView mapMarker_imageView;
-
-    String filePath_example = "/storage/emulated/0/DCIM/Camera/20180401_163414.jpg";
-    String filePath_example1 = "/storage/emulated/0/DCIM/Camera/20180401_162319.jpg";
-    String filePath_example2 = "/storage/emulated/0/DCIM/Camera/20180401_162309.jpg";
+    AppDatabase mDb;
+    List<ImageCollection> collections;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        mapViewModel = ViewModelProviders.of(this).get(MapViewModel.class);
         View root = inflater.inflate(R.layout.fragment_map, container, false);
-//        mapViewModel.getText().observe(this, new Observer<String>() {
-//            @Override
-//            public void onChanged(@Nullable String s) {
-//                textView.setText(s);
-//            }
-//        });
-
         setUpMap();
 
+        mapViewModel = ViewModelProviders.of(this).get(MapViewModel.class);
+        mDb = AppDatabase.getInstance(getContext());
+        collections = new ArrayList<>();
         return root;
     }
 
@@ -93,9 +78,9 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, Cluster
         private final IconGenerator mIconGenerator = new IconGenerator(getActivity().getApplicationContext());
         private final IconGenerator mClusterIconGenerator = new IconGenerator(getActivity().getApplicationContext());
         private final ImageView mImageView;
-        private final TextView mTextView;
+//        private final TextView mTextView;
         private final ImageView mClusterImageView;
-        private final TextView mClusterTextView;
+//        private final TextView mClusterTextView;
         private final int mDimension;
         Bitmap icon;
         MarkerItemRenderer() {
@@ -108,7 +93,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, Cluster
             mClusterIconGenerator.setContentView(clusterMarker_rootView);
 
             mClusterImageView = (ImageView) clusterMarker_rootView.findViewById(R.id.mapMarker_imageView);
-            mClusterTextView = (TextView) clusterMarker_rootView.findViewById(R.id.mapMarker_textView);
 
             // Single marker layout
             View singleMarker_rootView = getLayoutInflater().inflate(R.layout.map_marker, null);
@@ -116,12 +100,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, Cluster
             mIconGenerator.setContentView(singleMarker_rootView);
 
             mImageView = (ImageView) singleMarker_rootView.findViewById(R.id.mapMarker_imageView);
-            mTextView = (TextView) singleMarker_rootView.findViewById(R.id.mapMarker_textView);
-//            mImageView = new ImageView(getActivity().getApplicationContext());
             mDimension = (int) getResources().getDimension(R.dimen.custom_profile_image);
-//            mImageView.setLayoutParams(new ViewGroup.LayoutParams(mDimension, mDimension));
-//            int padding = (int) getResources().getDimension(R.dimen.custom_profile_padding);
-//            mImageView.setPadding(padding, padding, padding, padding);
         }
 
         @Override
@@ -129,84 +108,66 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, Cluster
             // Draw a single person.
             // Set the info window to show their name.
 
-//            mImageView.setImageResource(person.profilePhoto);
-//            Glide.with(getActivity().getApplicationContext()).
-//                    load(new File(marker.getFilePath())).
-//                    into(mImageView);
-//            Log.e("SINGLE_MAREKER", marker.getFilePath());
-            mTextView.setText("1");
-
             icon = mIconGenerator.makeIcon();
             markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon)).title(marker.getTitle());
         }
 
         @Override
-        protected void onClusterItemRendered(MarkerItem clusterItem, Marker marker) {
+        protected void onClusterItemRendered(final MarkerItem clusterItem, final Marker marker) {
             Glide.with(getActivity())
-                    .load(new File(clusterItem.getFilePath()))
-                    .apply(new RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL))
-                    .thumbnail(0.1f)
-                    .into(new SimpleTarget<Drawable>() {
-                        @Override
-                        public void onResourceReady(Drawable drawable, Transition<? super Drawable> transition) {
-                            mImageView.setImageDrawable(drawable);
-                            icon = mIconGenerator.makeIcon();
-                            marker.setIcon(BitmapDescriptorFactory.fromBitmap(icon));
+                 .load(clusterItem.getRepImage().getFile())
+                 .apply(new RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL))
+                 .thumbnail(0.1f)
+                 .into(new SimpleTarget<Drawable>() {
+                    @Override
+                    public void onResourceReady(Drawable drawable, Transition<? super Drawable> transition) {
+                        Marker marker = getMarker(clusterItem);
+                        if (marker == null) {
+                            return;
                         }
-                    });        }
+
+                        mImageView.setImageDrawable(drawable);
+                        icon = mIconGenerator.makeIcon();
+
+                        marker.setIcon(BitmapDescriptorFactory.fromBitmap(icon));
+                    }
+                 });
+        }
 
         @Override
         protected void onBeforeClusterRendered(Cluster<MarkerItem> cluster, MarkerOptions markerOptions) {
             // Draw multiple people.
             // Note: this method runs on the UI thread. Don't spend too much time in here (like in this example).
 
-//            List<Drawable> markerPhotos = new ArrayList<Drawable>(Math.min(4, cluster.getSize()));
-//
-//            int width = mDimension;
-//            int height = mDimension;
-//
-//            for (MarkerItem item : cluster.getItems()) {
-//                // Draw 4 at most.
-//                if (markerPhotos.size() == 4) break;
-////                Drawable drawable = getResources().getDrawable(item.profilePhoto);
-//                Drawable drawable = Drawable.createFromPath(item.getFilePath());
-//                Log.e("MARKER_PHOto", "add" + drawable.toString());
-//
-//                drawable.setBounds(0, 0, width, height);
-//                markerPhotos.add(drawable);
-//            }
-//            MultiDrawable multiDrawable = new MultiDrawable(markerPhotos);
-//            multiDrawable.setBounds(0, 0, width, height);
-//
-//            mClusterImageView.setImageDrawable(multiDrawable);
-//            Bitmap icon = mClusterIconGenerator.makeIcon(String.valueOf(cluster.getSize()));
-//            markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon));
+
         }
 
         @Override
-        protected void onClusterRendered(Cluster<MarkerItem> cluster, Marker marker) {
+        protected void onClusterRendered(final Cluster<MarkerItem> cluster, final Marker marker) {
             final List<Drawable> markerPhotos = new ArrayList<>(Math.min(4, cluster.getSize()));
             final int width = mDimension;
             final int height = mDimension;
-            Bitmap dummyBitmap = null;
-            Drawable drawable;
-            final int clusterSize = cluster.getSize();
-            final int[] count = {0};
-
             for (MarkerItem item : cluster.getItems()) {
                 // Draw 4 at most.
                 if (markerPhotos.size() == 4) break;
                 try {
                     Glide.with(getActivity().getApplicationContext())
-                            .load(new File(item.getFilePath()))
-                            .apply(new RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL))
+                            .load(item.getRepImage().getFile())
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
+                            .thumbnail(0.1f)
                             .into(new SimpleTarget<Drawable>(){
                                 @Override
                                 public void onResourceReady(@NonNull Drawable resource, @Nullable Transition<? super Drawable> transition) {
+                                    Marker marker = getMarker(item);
+                                    if (marker == null) {
+                                        return;
+                                    }
+
                                     resource.setBounds(0, 0, width, height);
                                     markerPhotos.add(resource);
                                     MultiDrawable multiDrawable = new MultiDrawable(markerPhotos);
                                     multiDrawable.setBounds(0, 0, width, height);
+
                                     mClusterImageView.setImageDrawable(multiDrawable);
                                     Bitmap icon = mClusterIconGenerator.makeIcon(String.valueOf(cluster.getSize()));
                                     marker.setIcon(BitmapDescriptorFactory.fromBitmap(icon));
@@ -270,12 +231,12 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, Cluster
         // Does nothing, but you could go into the user's profile page, for example.
     }
 
-    protected void startDemo(boolean isRestore) {
+    protected void initClusterManager(boolean isRestore) {
         if (!isRestore) {
-            getMap().moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(51.503186, -0.126446), 9.5f));
+            getMap().moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(37.715133, 126.734086), 10f));
         }
 
-        mClusterManager = new ClusterManager<MarkerItem>(getActivity().getApplicationContext(), getMap());
+        mClusterManager = new ClusterManager<>(getActivity().getApplicationContext(), getMap());
         mClusterManager.setRenderer(new MarkerItemRenderer());
         getMap().setOnCameraIdleListener(mClusterManager);
         getMap().setOnMarkerClickListener(mClusterManager);
@@ -285,27 +246,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, Cluster
         mClusterManager.setOnClusterItemClickListener(this);
         mClusterManager.setOnClusterItemInfoWindowClickListener(this);
 
-        addItems();
-        mClusterManager.cluster();
     }
-
-    private void addItems() {
-        mClusterManager.addItem(new MarkerItem(position(), filePath_example));
-        mClusterManager.addItem(new MarkerItem(position(), filePath_example));
-        mClusterManager.addItem(new MarkerItem(position(), filePath_example1));
-        mClusterManager.addItem(new MarkerItem(position(), filePath_example1));
-        mClusterManager.addItem(new MarkerItem(position(), filePath_example2));
-        mClusterManager.addItem(new MarkerItem(position(), filePath_example2));
-    }
-
-    private LatLng position() {
-        return new LatLng(random(51.6723432, 51.38494009999999), random(0.148271, -0.3514683));
-    }
-
-    private double random(double min, double max) {
-        return mRandom.nextDouble() * (max - min) + min;
-    }
-
 
     public void setUpMap() {
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.mapFragment);
@@ -322,70 +263,55 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, Cluster
             return;
         }
         mMap = map;
-        startDemo(false);
+        initClusterManager(false);
+        AppExecutors.getInstance()
+                .diskIO()
+                .execute(() -> {
+                    int offset = 0;
+                    int size = -1;
+                    while ((offset == 0 && size == -1) ||
+                            (size != 0)) {
+                        List<ImageCollection> clist = DatabaseUtils.getCollectionsFromDbByRange(mDb, 400, offset);
+
+                        size = clist.size();
+                        offset += size;
+                        if (size > 0) {
+                            AppExecutors.getInstance().mainThread().execute(() -> mapViewModel.insertAll(clist));
+                        }
+                    }
+                });
+
+        mapViewModel.getImageCollections().observe(this, (collections) -> {
+            getMap().clear();
+            mClusterManager.clearItems();
+
+            List<MarkerItem> items = new ArrayList<>();
+            for (ImageCollection c: collections) {
+                List<Image> images = c.getRepImages();
+                Image repImage = images.get(0);
+                LatLng location = null;
+                if (images.size() > 0) {
+                    double lat = repImage.getLatitude();
+                    double lng = repImage.getLongitude();
+
+                    if (lat == 0.0 || lng == 0.0) {
+                        continue;
+                    } else {
+                        location = new LatLng(lat, lng);
+                    }
+                }
+                if (location == null) {
+                    continue;
+                }
+
+                items.add(new MarkerItem(location, c));
+            }
+
+            mClusterManager.addItems(items);
+            Log.e("MARKER_CLUSTER", "DO CLUSTER!");
+            Log.e("MARKER_CLUSTER", collections.size() + "");
+            Log.e("MARKER_CLUSTER", collections.size() + "");
+            mClusterManager.cluster();
+        });
     }
-
-//    @Override
-//    public void onMapReady(GoogleMap googleMap) {
-//        mMap = googleMap;
-//
-//        LatLng SEOUL = new LatLng(37.56, 126.97);
-//
-//        marker_root_view = LayoutInflater.from(getContext()).inflate(R.layout.map_marker, null);
-//        mapMarker_textView = (TextView) marker_root_view.findViewById(R.id.mapMarker_textView);
-//        mapMarker_imageView = (ImageView) marker_root_view.findViewById(R.id.mapMarker_imageView);
-//
-//        addCustomMarker(new MarkerItem(37.56, 126.97, 2, filePath_example));
-//        addCustomMarker(new MarkerItem(37.4, 126.9, 4, filePath_example1));
-//        addCustomMarker(new MarkerItem(37.60, 127.0, 10, filePath_example2));
-//
-//        mMap.moveCamera(CameraUpdateFactory.newLatLng(SEOUL));
-//        mMap.animateCamera(CameraUpdateFactory.zoomTo(10));
-//    }
-
-    private void addCustomMarker(MarkerItem item) {
-//        if (mMap == null) {
-//            return;
-//        }
-//
-//        final double latitude = item.getLatitude();
-//        final double longitude = item.getLongitude();
-//        final String photoNum = String.valueOf(item.getPhotoNum());
-//
-//        Glide.with(getContext()).
-//                load(new File(item.getFilePath()))
-//                .fitCenter()
-//                .transform()
-//                .into(new CustomTarget<Drawable>() {
-//                    @Override
-//                    public void onResourceReady(@NonNull Drawable resource, @Nullable Transition<? super Drawable> transition) {
-//                        LatLng position = new LatLng(latitude, longitude);
-//                        mapMarker_textView.setText(photoNum);
-//                        mMap.addMarker(new MarkerOptions()
-//                                .position(position)
-//                                .icon(BitmapDescriptorFactory.fromBitmap(getMarkerBitmapFromView(marker_root_view, ((BitmapDrawable) resource).getBitmap()))));
-//                    }
-//
-//                    @Override
-//                    public void onLoadCleared(@Nullable Drawable placeholder) {
-//
-//                    }
-//                });
-    }
-
-//    private Bitmap getMarkerBitmapFromView(View view, Bitmap bitmap) {
-//        mapMarker_imageView.setImageBitmap(bitmap);
-//        view.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-//        view.layout(0, 0, view.getMeasuredWidth(), view.getMeasuredHeight());
-//        view.buildDrawingCache();
-//        Bitmap returnedBitmap = Bitmap.createBitmap(view.getMeasuredWidth(), view.getMeasuredHeight(),
-//                Bitmap.Config.ARGB_8888);
-//        Canvas canvas = new Canvas(returnedBitmap);
-//        canvas.drawColor(Color.WHITE, PorterDuff.Mode.SRC_IN);
-//        Drawable drawable = view.getBackground();
-//        if (drawable != null)
-//            drawable.draw(canvas);
-//        view.draw(canvas);
-//        return returnedBitmap;
-//    }
 }

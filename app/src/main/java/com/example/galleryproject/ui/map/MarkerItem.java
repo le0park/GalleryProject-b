@@ -1,69 +1,51 @@
 package com.example.galleryproject.ui.map;
 
+import com.example.galleryproject.Model.Image;
+import com.example.galleryproject.Model.ImageCollection;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.maps.android.clustering.ClusterItem;
 
+import java.util.List;
+
 public class MarkerItem implements ClusterItem {
-
     private LatLng location;
+    private ImageCollection collection;
 
-    private double latitude;
-    private double longitude;
-    private int photoNum;
-    private String filePath;
-
-    public MarkerItem(){
-        // Seoul lat, long
-        latitude = 37.56;
-        longitude = 126.97;
-        this.location = new LatLng(latitude, longitude);
-        photoNum = 0;
-        filePath = null;
-    }
-
-    public MarkerItem(LatLng location, String filePath){
+    public MarkerItem(LatLng location, ImageCollection collection){
         this.location = location;
-        this.filePath = filePath;
+        this.collection = collection;
     }
 
-    public MarkerItem(double latitude, double longitude, int photoNum, String filePath){
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.location = new LatLng(latitude, longitude);
-        this.photoNum = photoNum;
-        this.filePath = filePath;
+    public MarkerItem(double latitude, double longitude, ImageCollection collection){
+        this(new LatLng(latitude, longitude), collection);
     }
 
     public double getLatitude() {
-        return latitude;
+        return this.location.latitude;
     }
 
     public void setLatitude(double latitude) {
-        this.latitude = latitude;
+        this.location = new LatLng(latitude, getLongitude());
     }
 
     public double getLongitude() {
-        return longitude;
+        return this.location.longitude;
     }
 
     public void setLongitude(double longitude) {
-        this.longitude = longitude;
+        this.location = new LatLng(getLatitude(), longitude);
     }
 
-    public int getPhotoNum() {
-        return photoNum;
+    public Image getRepImage() {
+        if (collection.getRepImages().size() > 0) {
+            return this.collection.getRepImages().get(0);
+        }
+
+        return null;
     }
 
-    public void setPhotoNum(int photoNum) {
-        this.photoNum = photoNum;
-    }
-
-    public String getFilePath() {
-        return filePath;
-    }
-
-    public void setFilePath(String filePath) {
-        this.filePath = filePath;
+    public List<Image> getRepImages() {
+        return this.collection.getRepImages();
     }
 
     @Override
@@ -73,11 +55,15 @@ public class MarkerItem implements ClusterItem {
 
     @Override
     public String getTitle() {
-        return filePath.substring(0, 5);
+        return getRepImage().getFile()
+                            .toPath()
+                            .toString()
+                            .substring(0, 5);
     }
 
     @Override
     public String getSnippet() {
-        return photoNum + "개";
+        return getRepImages().size() + "개";
     }
+
 }
