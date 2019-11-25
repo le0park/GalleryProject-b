@@ -69,6 +69,7 @@ import xyz.sangcomz.stickytimelineview.TimeLineRecyclerView;
 import xyz.sangcomz.stickytimelineview.model.SectionInfo;
 
 public class TimeLineFragment extends Fragment {
+    public static final String TENSORFLOW_MODEL_PATH = "kanghee_model.tflite";
     public static final String BASE_DIRECTORY_PATH = "DCIM/Camera";
     public static final String EXTENSION_TYPE = ".jpg";
     private static final int IMAGE_TIME_RANGE = 7;
@@ -143,95 +144,93 @@ public class TimeLineFragment extends Fragment {
 
         // 데이터베이스 생성
         mDb = AppDatabase.getInstance(getContext());
-
         AppExecutors.getInstance()
-                    .diskIO()
-                    .execute(() -> {
+                .diskIO()
+                .execute(() -> {
 
-                        // 이미지 파일 목록 추출
-                        targetFiles = getListOfFile();
-                        selectedImages = targetFiles.stream()
-                                                    .map(UnitImage::new)
-                                                    .collect(Collectors.toList());
+                    // 이미지 파일 목록 추출
+                    targetFiles = getListOfFile();
+                    selectedImages = targetFiles.stream()
+                            .map(UnitImage::new)
+                            .collect(Collectors.toList());
 
-                        // 이미 데이터베이스에 저장되어 있는 파일 제거
-                        List<DbImage> dbImages = mDb.dbImageDao().getAll();
-                        List<Image> newImages = dbImages.stream()
-                                                        .map(x -> new DbImageAdapter(x))
-                                                        .collect(Collectors.toList());
+                    // 이미 데이터베이스에 저장되어 있는 파일 제거
+                    List<DbImage> dbImages = mDb.dbImageDao().getAll();
+                    List<Image> newImages = dbImages.stream()
+                            .map(x -> new DbImageAdapter(x))
+                            .collect(Collectors.toList());
 
-                        selectedImages.removeIf((image) -> newImages.contains(image));
+                    selectedImages.removeIf((image) -> newImages.contains(image));
 
-                        imageOrderIdx = 0;
-                        partedImages = splitImagesInDayRange(selectedImages, IMAGE_TIME_RANGE);
+                    imageOrderIdx = 0;
+                    partedImages = splitImagesInDayRange(selectedImages, IMAGE_TIME_RANGE);
 
 
 
-                        List<DbPriority> priorities = mDb.dbPriorityDao().getAll();
-                        if (priorities.size() != 4) {
-                            mDb.dbPriorityDao().deleteAll();
-                            AppExecutors.getInstance().mainThread().execute(() -> {
-                                SurveyDialogFragment survey = SurveyDialogFragment.getInstance();
-                                survey.show(getChildFragmentManager(), "Survey Dialog");
-                                survey.setSurveyClickListener((ArrayList<String> categories) -> {
+                    List<DbPriority> priorities = mDb.dbPriorityDao().getAll();
+                    if (priorities.size() != 4) {
+                        mDb.dbPriorityDao().deleteAll();
+                        AppExecutors.getInstance().mainThread().execute(() -> {
+                            SurveyDialogFragment survey = SurveyDialogFragment.getInstance();
+                            survey.show(getChildFragmentManager(), "Survey Dialog");
+                            survey.setSurveyClickListener((ArrayList<String> categories) -> {
 
-                                    for (int i = 0; i < categories.size(); i++) {
+                                for (int i = 0; i < categories.size(); i++) {
+                                    String category = categories.get(i);
+                                    int categoryInt = Category.getValue(category);
+                                    objectPriority.add(categoryInt);
 
-                                        String category = categories.get(i);
-                                        int categoryInt = Category.getValue(category);
-                                        objectPriority.add(categoryInt);
+                                    DbPriority priority = new DbPriority();
+                                    priority.setCategory(categoryInt);
+                                    priority.setRank(i);
+                                    AppExecutors.getInstance().diskIO().execute(() -> {
+                                        mDb.dbPriorityDao().insert(priority);
+                                    });
+                                }
 
-                                        DbPriority priority = new DbPriority();
-                                        priority.setCategory(categoryInt);
-                                        priority.setRank(i);
-                                        AppExecutors.getInstance().diskIO().execute(() -> {
-                                            mDb.dbPriorityDao().insert(priority);
-                                        });
-                                    }
+                                objectPriority.add(Category.ETC);
 
-                                    objectPriority.add(Category.ETC);
+                                int[] priority = objectPriority.stream()
+                                        .mapToInt(Integer::intValue)
+                                        .toArray();
 
-                                    int[] priority = objectPriority.stream()
-                                            .mapToInt(Integer::intValue)
-                                            .toArray();
+                                ImageGroupLabelAnalyzer.setLabelPriority(priority);
 
-                                    ImageGroupLabelAnalyzer.setLabelPriority(priority);
+                                if (partedImages.size() > 0) {
+                                    Image[] images = partedImages.get(imageOrderIdx).stream()
+                                            .toArray(Image[]::new);
 
-                                    if (partedImages.size() > 0) {
-                                        Image[] images = partedImages.get(imageOrderIdx).stream()
-                                                .toArray(Image[]::new);
-
-                                        new ImageGroupAsyncTask(() -> {}).execute(images);
-                                    }
-                                });
+                                    new ImageGroupAsyncTask(() -> {}).execute(images);
+                                }
                             });
-                        } else {
-                            objectPriority = new ArrayList<>();
-                            objectPriority.add(0);
-                            objectPriority.add(0);
-                            objectPriority.add(0);
-                            objectPriority.add(0);
-                            objectPriority.add(0);
+                        });
+                    } else {
+                        objectPriority = new ArrayList<>();
+                        objectPriority.add(0);
+                        objectPriority.add(0);
+                        objectPriority.add(0);
+                        objectPriority.add(0);
+                        objectPriority.add(0);
 
-                            for (DbPriority priority: priorities) {
-                                objectPriority.set(priority.rank, priority.category);
-                            }
-
-                            objectPriority.set(4, Category.ETC);
-                            int[] priority = objectPriority.stream()
-                                    .mapToInt(Integer::intValue)
-                                    .toArray();
-                            ImageGroupLabelAnalyzer.setLabelPriority(priority);
-
-                            if (partedImages.size() > 0) {
-                                Image[] images = partedImages.get(imageOrderIdx).stream()
-                                        .toArray(Image[]::new);
-
-                                new ImageGroupAsyncTask(() -> {}).execute(images);
-                            }
+                        for (DbPriority priority: priorities) {
+                            objectPriority.set(priority.rank, priority.category);
                         }
-                    });
 
+                        objectPriority.set(4, Category.ETC);
+                        int[] priority = objectPriority.stream()
+                                .mapToInt(Integer::intValue)
+                                .toArray();
+
+                        ImageGroupLabelAnalyzer.setLabelPriority(priority);
+
+                        if (partedImages.size() > 0) {
+                            Image[] images = partedImages.get(imageOrderIdx).stream()
+                                    .toArray(Image[]::new);
+
+                            new ImageGroupAsyncTask(() -> {}).execute(images);
+                        }
+                    }
+                });
         return root;
     }
 
@@ -245,7 +244,7 @@ public class TimeLineFragment extends Fragment {
                         int offset = 0;
                         int size = -1;
                         while ((offset == 0 && size == -1) ||
-                                (size != 0)){
+                               (size != 0)) {
                             List<ImageCollection> collections = getCollectionsFromDbByRange(10, offset);
 
                             size = collections.size();
@@ -522,7 +521,7 @@ public class TimeLineFragment extends Fragment {
                 Log.e("LABEL_ANALYZER", analyzer.toString());
 
                 DeepLearningModel model = new DeepLearningModel(getActivity());
-                Interpreter tf_lite = model.getTfliteInterpreter("kanghee_model.tflite");
+                Interpreter tf_lite = model.getTfliteInterpreter(TENSORFLOW_MODEL_PATH);
 
                 Log.e("getXSize : ", analyzer.getX().size() + "");
                 float[][][] input = model.parseModelInput(analyzer.getX());
@@ -530,13 +529,14 @@ public class TimeLineFragment extends Fragment {
 
                 tf_lite.run(input, priority);
 
-                for(int i=0;i<input.length;i++)
+                for(int i = 0; i < input.length; i++)
                     Log.e("PRIORITY : ", "size : " + input.length + " == " + priority.length + "  /  " + priority[i][0] + "");
 
                 List<Image> images = result.getGroups().get(0).getImages();
                 List<Image> repImages = model.getRepImages(analyzer.getRepImageCandidate(), priority);
 
-                result.setRepImages(repImages);
+                // 세 장을 선택
+                result.setRepImages(repImages.subList(0, repImages.size() > 3 ? 3 : repImages.size()));
                 
                 timeLineViewModel.insert(result);
                 listener.onFinished();
@@ -557,25 +557,27 @@ public class TimeLineFragment extends Fragment {
                             mDb.dbImageCollectionDao()
                                .insertWithGroups((int) collectionId, newDbImageGroups);
 
-                    List<List<Image>> newGroupOfImages = result.getGroups().stream()
-                                                               .map(ImageGroup::getImages)
-                                                               .collect(Collectors.toList());
+//                    List<List<Image>> newGroupOfImages = result.getGroups().stream()
+//                                                               .map(ImageGroup::getImages)
+//                                                               .collect(Collectors.toList());
 
                     List<Long> imageIdsForRepImage = new ArrayList<>();
 
                     // DbGroup <- DbImage
-                    List<Long> dbImageIds;
                     for (int i = 0; i < dbImageGroupIds.size(); i++) {
-                        Long groupId = dbImageGroupIds.get(i);
+                        ImageGroup ig = result.getGroups().get(i);
+                        List<Image> iImageGroup = ig.getImages();
 
-                        List<Image> iImageGroup = newGroupOfImages.get(i);
                         List<DbImage> newDbImages = iImageGroup.stream()
                                                                .map(ImageAdapter::new)
                                                                .collect(Collectors.toList());
 
+                        List<Long> dbImageIds = new ArrayList<>();
+                        Long groupId = dbImageGroupIds.get(i);
                         for(DbImage image: newDbImages) {
                             long dbImageId = mDb.imagesWithImageGroupDao()
                                                 .insertImageWithGroupId(groupId, image);
+                            dbImageIds.add(dbImageId);
 
                             // 대표사진 imageId 값 저장
                             for (Image rim: repImages) {
@@ -585,16 +587,12 @@ public class TimeLineFragment extends Fragment {
                             }
                         }
 
-                        dbImageIds = mDb.imagesWithImageGroupDao()
-                                        .insertImagesWithImageGroupId(groupId, newDbImages);
 
-
-                        List<LabelGroup> labelGroup = labelGroups.get(i);
 
                         // DbImage <- DbLabel
-                        for (int j = 0; dbImageIds != null && j < dbImageIds.size(); j++) {
+                        List<LabelGroup> labelGroup = labelGroups.get(i);
+                        for (int j = 0; j < dbImageIds.size(); j++) {
                             long dbImageId = dbImageIds.get(j);
-
                             List<Label> labels = labelGroup.get(j).getLabels();
                             List<DbLabel> dbLabels = labels.stream()
                                     .map(LabelAdapter::new)
@@ -706,9 +704,8 @@ public class TimeLineFragment extends Fragment {
             for (ImageGroup group: groups) {
                 List<Image> images = group.getImages();
                 List<LabelGroup> labelGroups = images.stream()
-                        .map(x -> processImagesWithMlkit(x))
-                        .collect(Collectors.toList());
-
+                                                     .map(x -> processImagesWithMlkit(x))
+                                                     .collect(Collectors.toList());
                 allLabelGroups.add(labelGroups);
             }
 
