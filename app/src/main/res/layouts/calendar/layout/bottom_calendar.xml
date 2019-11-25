@@ -10,6 +10,10 @@
     android:paddingRight="@dimen/bottomCalendar_paddingLeftRight" >
 <!--    android:elevation="10dp"-->
 
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -35,6 +39,17 @@
                 android:textSize="20dp"
                 android:textStyle="bold"/>
 
+            <EditText
+                android:id="@+id/bottom_YearEditText"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="20dp"
+                android:textStyle="normal"
+                android:visibility="gone"
+                />
+
             <ImageButton
                 android:id="@+id/bottomCalendar_yearRightButton"
                 android:layout_width="@dimen/bottomCalendar_yearButton_width"
@@ -44,6 +59,18 @@
                 android:src="@drawable/calendar_right_icon"/>
 
         </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/bottomCalendar_yearSaveButton"
+            android:layout_width="@dimen/bottomCalendar_yearButton_width"
+            android:layout_height="@dimen/bottomCalendar_yearButton_height"
+            android:layout_marginRight="30dp"
+            android:layout_gravity="right|center_vertical"
+            android:background="@color/mainWhite"
+            android:scaleType="fitXY"
+            android:src="@drawable/comment"
+            android:visibility="gone"/>
+    </FrameLayout>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/monthRecyclerView"

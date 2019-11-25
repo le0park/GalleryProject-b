@@ -50,7 +50,6 @@ public class PhotoGroupActivity extends AppCompatActivity {
     private List<ImageGroup> imageGroups;
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

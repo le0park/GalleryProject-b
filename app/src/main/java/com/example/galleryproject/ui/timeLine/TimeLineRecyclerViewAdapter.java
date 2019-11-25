@@ -7,6 +7,7 @@ import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +16,7 @@ import android.view.animation.AnimationSet;
 import android.view.animation.AnimationUtils;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
@@ -64,7 +66,7 @@ public class TimeLineRecyclerViewAdapter extends TimeLineRecyclerView.Adapter<Ti
         holder.imageContainer.setAdapter(adapter);
         holder.imageContainer.suppressLayout(true);
 
-        if(holder.imageContainer.getItemDecorationCount() == 0) {
+        if (holder.imageContainer.getItemDecorationCount() == 0) {
             TimeLineHorizontalDecorator decorator = new TimeLineHorizontalDecorator(10);
             holder.imageContainer.addItemDecoration(decorator);
         }
@@ -75,11 +77,9 @@ public class TimeLineRecyclerViewAdapter extends TimeLineRecyclerView.Adapter<Ti
     /**
      * Here is the key method to apply the animation
      */
-    private void setAnimation(View viewToAnimate, int position)
-    {
+    private void setAnimation(View viewToAnimate, int position) {
         // If the bound view wasn't previously displayed on screen, it's animated
-        if (position > lastPosition)
-        {
+        if (position > lastPosition) {
             AnimationSet animations = new AnimationSet(false);
             Animation pushIn = AnimationUtils.loadAnimation(context, R.anim.push_in_from_top);
             animations.addAnimation(pushIn);
@@ -92,6 +92,27 @@ public class TimeLineRecyclerViewAdapter extends TimeLineRecyclerView.Adapter<Ti
     @Override
     public int getItemCount() {
         return imageCollections.size();
+    }
+
+    public int getTimePosition(String year, String month) {
+        int position = 0;
+        int click_year = Integer.parseInt(year.trim());
+        int click_month = Integer.parseInt(month.trim());
+
+        for (ImageCollection ic : imageCollections) {
+            int collection_year = ic.getDate().getYear();
+            int collection_month = ic.getDate().getMonth().getValue();
+//            Log.e("sort", "y : " + collection_year + ", m : " + collection_month);
+            if (click_year > collection_year || (click_year >= collection_year && click_month >= collection_month)) {
+//                Log.e("Position : ", "click year : " + click_year + ", click month : "  + click_month);
+//                Log.e("Position : ", position + ", find year : " + collection_year + ", find month : " + collection_month);
+                return position;
+            } else {
+                position++;
+            }
+        }
+//        Log.e("can't find position : ", position + " , length : " + imageCollections.size());
+        return -1;
     }
 
     public static void setReadMore(final TextView view, final String text, final int maxLine) {
@@ -140,7 +161,6 @@ public class TimeLineRecyclerViewAdapter extends TimeLineRecyclerView.Adapter<Ti
                 }
 
 
-
                 ClickableSpan clickableSpan = new ClickableSpan() {
                     // 클릭 이벤트 리스너
                     @Override
@@ -167,8 +187,6 @@ public class TimeLineRecyclerViewAdapter extends TimeLineRecyclerView.Adapter<Ti
         });
     }
 
-
-
     public class TimeLineRecyclerViewHolder extends RecyclerView.ViewHolder {
         protected LinearLayout container;
         protected RecyclerView imageContainer;
@@ -182,7 +200,7 @@ public class TimeLineRecyclerViewAdapter extends TimeLineRecyclerView.Adapter<Ti
 
             container.setOnClickListener((View view) -> {
                 int position = getAdapterPosition();
-                if(position != RecyclerView.NO_POSITION){
+                if (position != RecyclerView.NO_POSITION) {
                     ImageCollection collection = imageCollections.get(position);
 
                     Intent intent = new Intent(context, PhotoGroupActivity.class);

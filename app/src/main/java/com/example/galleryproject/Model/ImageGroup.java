@@ -26,7 +26,7 @@ public abstract class ImageGroup implements Parcelable {
 
     public List<File> getFiles() {
         List<File> paths = new ArrayList<>();
-        for (Image image: images) {
+        for (Image image : images) {
             paths.add(image.getFile());
         }
 
@@ -45,23 +45,23 @@ public abstract class ImageGroup implements Parcelable {
         return getStartDate();
     }
 
-        public LocalDateTime getStartDate() {
-            LocalDateTime start = LocalDateTime.now();
-            for (Image image: images) {
-                LocalDateTime t = image.getCreationTime();
+    public LocalDateTime getStartDate() {
+        LocalDateTime start = LocalDateTime.now();
+        for (Image image : images) {
+            LocalDateTime t = image.getCreationTime();
 
-                if (start.compareTo(t) >= 0) {
-                    start = t;
-                }
+            if (start.compareTo(t) >= 0) {
+                start = t;
             }
+        }
 
-            return start;
+        return start;
     }
 
 
     public LocalDateTime getLastDate() {
         LocalDateTime last = LocalDateTime.now();
-        for (Image image: images) {
+        for (Image image : images) {
             LocalDateTime t = image.getCreationTime();
 
             if (last.compareTo(t) < 0) {
