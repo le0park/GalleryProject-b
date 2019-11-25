@@ -22,9 +22,24 @@
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:background="@color/mainGray"
+            android:theme="@style/TimeLineRecyclerView"
+
             app:sectionBackgroundColor="@color/mainGray"
+
+            app:sectionTitleTextColor="#414fca"
+            app:sectionSubTitleTextColor="#d16767"
+
             app:timeLineColor="@color/color_timeLine_line"
-            app:timeLineWidth="@dimen/timeLine_line_width" />
+
+            app:timeLineCircleColor="#51ae45"
+            app:timeLineCircleStrokeColor="#f9f9f9"
+
+            app:sectionTitleTextSize="14sp"
+            app:sectionSubTitleTextSize="12sp"
+
+            app:timeLineWidth="@dimen/timeLine_line_width"
+            app:isSticky="true"
+            />
 <!--        app:customDotDrawable="@drawable/dot"-->
 
         <com.example.galleryproject.BottomCalendarLayout

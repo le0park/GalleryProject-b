@@ -333,7 +333,7 @@ public class TimeLineFragment extends Fragment {
             @Override
             public SectionInfo getSectionHeader(int position) {
                 ImageCollection imageCollection = data.get(position);
-                Drawable dot = ResourcesCompat.getDrawable(getContext().getResources(), R.drawable.dot, null);
+//                Drawable dot = ResourcesCompat.getDrawable(getContext().getResources(), R.drawable.dot, null);
 
                 String locationMessage = null;
                 if (imageCollection.getGroups().size() > 0) {

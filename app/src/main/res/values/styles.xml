@@ -15,6 +15,10 @@
         <item name="android:fontFamily">@font/binggrae_bold</item>
     </style>
 
+    <style name="TimeLineRecyclerView">
+        <item name="android:fontFamily">@font/binggrae_bold</item>
+    </style>
+
     <style name="TextViewStyle" parent="@android:style/Widget.DeviceDefault.TextView">
         <item name="android:fontFamily">@font/custom_font</item>
     </style>

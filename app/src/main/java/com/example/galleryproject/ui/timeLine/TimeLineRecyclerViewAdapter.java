@@ -156,8 +156,7 @@ public class TimeLineRecyclerViewAdapter extends TimeLineRecyclerView.Adapter<Ti
             super(itemView);
             memoView = itemView.findViewById(R.id.timeLineMemo);
             imageRecyclerView = itemView.findViewById(R.id.timeLine_Image_RecyclerView);
-
-
+            
             itemView.setOnClickListener((View view) -> {
 
                 int position = getAdapterPosition();
