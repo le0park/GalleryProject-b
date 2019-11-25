@@ -30,6 +30,7 @@ class SurveyAdapter extends RecyclerView.Adapter<SurveyAdapter.ViewHolder>
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         public TextView survey_item_textView;
+        public TextView survey_item_indexTextView;
         public ImageButton survey_item_button;
         View rowView;
         ViewHolder(View itemView) {
@@ -37,6 +38,7 @@ class SurveyAdapter extends RecyclerView.Adapter<SurveyAdapter.ViewHolder>
             // 뷰 객체에 대한 참조. (hold strong reference)
             rowView = itemView;
             survey_item_textView = itemView.findViewById(R.id.survey_item_textView);
+            survey_item_indexTextView = itemView.findViewById(R.id.survey_item_indexTextView);
             survey_item_button = itemView.findViewById(R.id.survey_item_button);
         }
     }
@@ -62,12 +64,12 @@ class SurveyAdapter extends RecyclerView.Adapter<SurveyAdapter.ViewHolder>
 
     @Override
     public void onRowSelected(ViewHolder myViewHolder) {
-        myViewHolder.rowView.setBackgroundColor(Color.GRAY);
+        myViewHolder.rowView.setBackgroundColor(Color.parseColor("#777777"));
     }
 
     @Override
     public void onRowClear(ViewHolder myViewHolder) {
-        myViewHolder.rowView.setBackgroundColor(Color.WHITE);
+        myViewHolder.rowView.setBackgroundColor(Color.TRANSPARENT);
     }
 
     @NonNull
@@ -85,8 +87,8 @@ class SurveyAdapter extends RecyclerView.Adapter<SurveyAdapter.ViewHolder>
     @Override
     public void onBindViewHolder(@NonNull SurveyAdapter.ViewHolder holder, int position) {
         String text = categories.get(position);
+        holder.survey_item_indexTextView.setText(position + 1 + "");
         holder.survey_item_textView.setText(text);
-
         holder.survey_item_button.setOnTouchListener(new View.OnTouchListener(){
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {

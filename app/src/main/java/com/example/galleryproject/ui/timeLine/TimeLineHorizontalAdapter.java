@@ -4,6 +4,8 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
@@ -28,11 +30,11 @@ public class TimeLineHorizontalAdapter extends RecyclerView.Adapter<TimeLineHori
     }
 
     public class TimeLineHorizontalViewHolder extends RecyclerView.ViewHolder{
-        protected ImageView timeLine_solo_ImageView;
+        protected ImageView container;
 
         public TimeLineHorizontalViewHolder(View view) {
             super(view);
-            timeLine_solo_ImageView = view.findViewById(R.id.timeLine_solo_ImageView);
+            container = view.findViewById(R.id.timeLine_solo_ImageView);
         }
     }
 
@@ -48,10 +50,12 @@ public class TimeLineHorizontalAdapter extends RecyclerView.Adapter<TimeLineHori
 
     @Override
     public void onBindViewHolder(@NonNull TimeLineHorizontalViewHolder holder, int position) {
+        holder.container.setDuplicateParentStateEnabled(true);
         Glide.with(context)
                 .load(images.get(position).getFile())
-                .into(holder.timeLine_solo_ImageView);
+                .into(holder.container);
     }
+
 
     @Override
     public int getItemCount() {

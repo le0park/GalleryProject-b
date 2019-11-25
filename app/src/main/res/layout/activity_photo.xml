@@ -1,31 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/black">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/mainWhite"
-        android:orientation="horizontal">
+        android:layout_height="match_parent">
 
-        <ImageButton
-            android:id="@+id/photo_backButton"
-            android:layout_width="@dimen/backButton_width"
-            android:layout_height="@dimen/backButton_height"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/constraintLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:background="@color/mainWhite"
-            android:scaleType="fitXY"
-            android:src="@drawable/calendar_left_icon" />
-    </LinearLayout>
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
-    <ImageView
-        android:id="@+id/photo_imageView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="@dimen/backButton_height"
-        android:adjustViewBounds="true"
-        android:scaleType="fitCenter"
-        />
+            <ImageButton
+                android:id="@+id/photo_backButton"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:background="@color/mainWhite"
+                android:padding="8dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/icons8_chevron_left_50"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <ImageView
+            android:id="@+id/photo_imageView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/constraintLayout" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </FrameLayout>

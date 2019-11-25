@@ -10,6 +10,10 @@ import android.text.style.ClickableSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationSet;
+import android.view.animation.AnimationUtils;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -19,22 +23,22 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.galleryproject.Model.Image;
 import com.example.galleryproject.Model.ImageCollection;
-import com.example.galleryproject.Model.ImageGroup;
 import com.example.galleryproject.PhotoGroupActivity;
 import com.example.galleryproject.R;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import xyz.sangcomz.stickytimelineview.TimeLineRecyclerView;
 
 public class TimeLineRecyclerViewAdapter extends TimeLineRecyclerView.Adapter<TimeLineRecyclerViewAdapter.TimeLineRecyclerViewHolder> {
     private List<ImageCollection> imageCollections;
     private Context context;
+    private int lastPosition = -1;
 
     public TimeLineRecyclerViewAdapter(Context context, List<ImageCollection> imageCollections) {
         this.context = context;
         this.imageCollections = imageCollections;
+
     }
 
     @NonNull
@@ -44,27 +48,45 @@ public class TimeLineRecyclerViewAdapter extends TimeLineRecyclerView.Adapter<Ti
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View v = inflater.inflate(R.layout.timeline_item, parent, false);
         TimeLineRecyclerViewHolder vh = new TimeLineRecyclerViewHolder(v);
+
         return vh;
     }
 
     @Override
     public void onBindViewHolder(@NonNull TimeLineRecyclerViewHolder holder, int position) {
-        ImageCollection collection = imageCollections.get(position);
+        setAnimation(holder.container, position);
 
+        ImageCollection collection = imageCollections.get(position);
         List<Image> images = collection.getRepImages();
         TimeLineHorizontalAdapter adapter = new TimeLineHorizontalAdapter(context, images);
+        holder.imageContainer.setHasFixedSize(true);
+        holder.imageContainer.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false));
+        holder.imageContainer.setAdapter(adapter);
+        holder.imageContainer.suppressLayout(true);
 
-        holder.imageRecyclerView.setHasFixedSize(true);
-        holder.imageRecyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false));
-        holder.imageRecyclerView.setAdapter(adapter);
-
-
-        if(holder.imageRecyclerView.getItemDecorationCount() == 0) {
+        if(holder.imageContainer.getItemDecorationCount() == 0) {
             TimeLineHorizontalDecorator decorator = new TimeLineHorizontalDecorator(10);
-            holder.imageRecyclerView.addItemDecoration(decorator);
+            holder.imageContainer.addItemDecoration(decorator);
         }
 
         setReadMore(holder.memoView, imageCollections.get(position).getMemo(), 2);
+    }
+
+    /**
+     * Here is the key method to apply the animation
+     */
+    private void setAnimation(View viewToAnimate, int position)
+    {
+        // If the bound view wasn't previously displayed on screen, it's animated
+        if (position > lastPosition)
+        {
+            AnimationSet animations = new AnimationSet(false);
+            Animation pushIn = AnimationUtils.loadAnimation(context, R.anim.push_in_from_top);
+            animations.addAnimation(pushIn);
+            viewToAnimate.startAnimation(animations);
+
+            lastPosition = position;
+        }
     }
 
     @Override
@@ -148,18 +170,17 @@ public class TimeLineRecyclerViewAdapter extends TimeLineRecyclerView.Adapter<Ti
 
 
     public class TimeLineRecyclerViewHolder extends RecyclerView.ViewHolder {
+        protected LinearLayout container;
+        protected RecyclerView imageContainer;
         public TextView memoView;
-        protected RecyclerView imageRecyclerView;
 
         public TimeLineRecyclerViewHolder(View itemView) {
-
             super(itemView);
+            container = itemView.findViewById(R.id.timeline_item_container);
+            imageContainer = itemView.findViewById(R.id.timeLine_Image_RecyclerView);
             memoView = itemView.findViewById(R.id.timeLineMemo);
-            imageRecyclerView = itemView.findViewById(R.id.timeLine_Image_RecyclerView);
 
-
-            itemView.setOnClickListener((View view) -> {
-
+            container.setOnClickListener((View view) -> {
                 int position = getAdapterPosition();
                 if(position != RecyclerView.NO_POSITION){
                     ImageCollection collection = imageCollections.get(position);
