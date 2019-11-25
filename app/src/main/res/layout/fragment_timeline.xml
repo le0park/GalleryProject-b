@@ -23,9 +23,9 @@
             android:layout_alignParentBottom="true"
             android:background="@color/mainGray"
             app:sectionBackgroundColor="@color/mainGray"
-            app:customDotDrawable="@drawable/dot"
             app:timeLineColor="@color/color_timeLine_line"
             app:timeLineWidth="@dimen/timeLine_line_width" />
+<!--        app:customDotDrawable="@drawable/dot"-->
 
         <com.example.galleryproject.BottomCalendarLayout
             android:id="@+id/bottomCalendar"

@@ -7,6 +7,20 @@
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:statusBarColor">#FAFAFA</item>
         <item name="android:windowLightStatusBar">true</item>
+        <item name="android:textViewStyle">@style/TextViewStyle</item>
+        <item name="android:editTextStyle">@style/EditTextStyle</item>
+    </style>
+
+    <style name="Widget.BottomNavigationView" parent="Widget.Design.BottomNavigationView">
+        <item name="android:fontFamily">@font/binggrae_bold</item>
+    </style>
+
+    <style name="TextViewStyle" parent="@android:style/Widget.DeviceDefault.TextView">
+        <item name="android:fontFamily">@font/custom_font</item>
+    </style>
+
+    <style name="EditTextStyle" parent="@android:style/Widget.DeviceDefault.EditText">
+        <item name="android:fontFamily">@font/custom_font</item>
     </style>
 
     <style name="SurveyTitle">
@@ -21,6 +35,7 @@
         <item name="android:layout_width">@dimen/surveyOrder_width</item>
         <item name="android:layout_height">@dimen/surveyOrder_height</item>
         <item name="android:gravity">center</item>
+        <item name="android:textStyle">bold</item>
     </style>
 
     <style name="SurveyCheckButton">

@@ -12,6 +12,7 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:text="@string/example_Text"
-        android:textSize="@dimen/bottomCalendar_month_textSize" />
+        android:textSize="@dimen/bottomCalendar_month_textSize"
+        android:textStyle="normal"/>
 
 </LinearLayout>

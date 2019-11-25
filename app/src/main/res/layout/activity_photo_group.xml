@@ -72,7 +72,8 @@
         android:background="@color/colorMemo"
         android:gravity="left|top"
         android:padding="@dimen/memo_padding"
-        android:visibility="visible" />
+        android:visibility="visible"
+        android:textStyle="bold"/>
 
     <EditText
         android:id="@+id/photoGroup_Memo_editText"
@@ -83,6 +84,7 @@
         android:background="@color/colorMemo"
         android:gravity="left|top"
         android:padding="@dimen/memo_padding"
-        android:visibility="gone" />
+        android:visibility="gone"
+        android:textStyle="normal"/>
 
 </LinearLayout>

@@ -14,6 +14,7 @@
         android:gravity="left|center_vertical"
         android:background="@color/mainWhite"
         android:text="@string/example_Text"
+        android:textStyle="bold"
         android:paddingLeft="@dimen/survey_item_padding" />
 
     <ImageButton

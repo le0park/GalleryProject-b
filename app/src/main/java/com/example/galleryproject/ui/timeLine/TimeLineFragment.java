@@ -348,10 +348,11 @@ public class TimeLineFragment extends Fragment {
                     }
                 }
 
+                //TODO dot drwable 수정
                 return new SectionInfo(
                         imageCollection.getDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                         locationMessage,
-                        dot);
+                        null);
             }
 
             @Override

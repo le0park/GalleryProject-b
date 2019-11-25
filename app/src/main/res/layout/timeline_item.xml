@@ -21,7 +21,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/example_Text"
-            android:textSize="@dimen/timeLine_textSize" />
+            android:textSize="@dimen/timeLine_textSize"
+            android:textStyle="normal"/>
     </LinearLayout>
 
 </LinearLayout>
