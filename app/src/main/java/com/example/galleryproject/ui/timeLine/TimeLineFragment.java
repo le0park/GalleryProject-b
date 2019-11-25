@@ -110,15 +110,15 @@ public class TimeLineFragment extends Fragment {
                 ViewModelProviders.of(this)
                                   .get(TimeLineViewModel.class);
 
-        timeLineViewModel.getImageGroups()
-                         .observe(this, (list) -> {
-
-            // Update the cached copy of the words in the adapter.
-            adapter.notifyDataSetChanged();
-        });
 
         List<ImageCollection> dataset = timeLineViewModel.getImageGroups().getValue();
         adapter = new TimeLineRecyclerViewAdapter(this.getContext(), dataset);
+
+        timeLineViewModel.getImageGroups()
+                .observe(this, (list) -> {
+                    // Update the cached copy of the words in the adapter.
+            adapter.notifyDataSetChanged();
+        });
 
         timeLineRecyclerView.addItemDecoration(getSectionCallback((ArrayList) dataset));
         timeLineRecyclerView.setAdapter(adapter);
@@ -252,7 +252,9 @@ public class TimeLineFragment extends Fragment {
                             if (size > 0) {
                                 AppExecutors.getInstance()
                                         .mainThread()
-                                        .execute(() -> timeLineViewModel.insertAll(collections));
+                                        .execute(() -> {
+                                            timeLineViewModel.insertAll(collections);
+                                        });
                             }
                         }
                     });
@@ -538,6 +540,8 @@ public class TimeLineFragment extends Fragment {
                 result.setRepImages(repImages.subList(0, repImages.size() > 3 ? 3 : repImages.size()));
                 
                 timeLineViewModel.insert(result);
+//                adapter.notifyItemInserted(position);
+
                 listener.onFinished();
 
                 // 생성된 타임라인 저장 thread

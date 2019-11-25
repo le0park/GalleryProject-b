@@ -19,39 +19,15 @@
     </LinearLayout>
 
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:orientation="horizontal">
 
-        <LinearLayout
-            android:layout_width="20dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_weight="1"
-            android:orientation="vertical">
-
-            <TextView
-                style="@style/SurveyOrder"
-                android:text="1" />
-
-            <TextView
-                style="@style/SurveyOrder"
-                android:text="2" />
-
-            <TextView
-                style="@style/SurveyOrder"
-                android:text="3" />
-
-            <TextView
-                style="@style/SurveyOrder"
-                android:text="4" />
-        </LinearLayout>
-
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/survey_recyclerView"
-            android:layout_width="@dimen/survey_recyclerView_width"
-            android:layout_height="@dimen/survey_recyclerView_height"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:layout_gravity="center"
             android:layout_weight="5" />
     </LinearLayout>
@@ -66,8 +42,10 @@
 
         <ImageButton
             android:id="@+id/survey_complete_button"
+            style="@style/SurveyCheckButton"
             android:adjustViewBounds="true"
-            style="@style/SurveyCheckButton"/>
+            android:padding="8dp"
+            android:src="@drawable/icons8_checkmark_50" />
 
     </LinearLayout>
 </LinearLayout>

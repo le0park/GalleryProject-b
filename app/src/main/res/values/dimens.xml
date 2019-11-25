@@ -20,7 +20,7 @@
     <dimen name="timeLine_dot_width">20dp</dimen>
     <dimen name="timeLine_dot_height">20dp</dimen>
 
-    <dimen name="backButton_width">30dp</dimen>
+    <dimen name="backButton_width">50dp</dimen>
     <dimen name="backButton_height">50dp</dimen>
     <dimen name="saveButton_width">40dp</dimen>
     <dimen name="saveButton_height">40dp</dimen>
