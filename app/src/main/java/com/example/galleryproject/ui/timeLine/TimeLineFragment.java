@@ -1,6 +1,5 @@
 package com.example.galleryproject.ui.timeLine;
 
-import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -13,7 +12,6 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
-import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -132,15 +130,29 @@ public class TimeLineFragment extends Fragment {
         });
 
         bottomCalendar.setOnCalendarClickListener((year, month) -> {
-            Toast.makeText(getActivity().getApplicationContext(), "Click : " + year + "년 " + month + "월", Toast.LENGTH_LONG).show();
             topCalendar.buttonChange();
             bottomCalendar.setVisibility();
-            topCalendar.setYearTextView(year);
-            topCalendar.setMonthTextView(month);
+
+            //year, month
+            int position = adapter.getTimePosition(year, month);
+            if(position == -1){ // can't find position
+                String postYear = topCalendar.getYearText();
+                postYear = postYear.substring(0, postYear.length()-1);
+                bottomCalendar.setBottom_YearTextView(postYear);
+
+                Toast.makeText(getActivity().getApplicationContext(), "없다임마", Toast.LENGTH_LONG).show();
+            }else { // find position
+                topCalendar.setYearTextView(year);
+                topCalendar.setMonthTextView(month);
+
+                LinearLayoutManager lm = new LinearLayoutManager(getActivity().getApplicationContext(), LinearLayoutManager.VERTICAL, false);
+                //offset 1 means 1 pixel
+                lm.scrollToPositionWithOffset(position, 1);
+                timeLineRecyclerView.setLayoutManager(lm);
+
+                Toast.makeText(getActivity().getApplicationContext(), "Click : " + year + "년 " + month + "월", Toast.LENGTH_LONG).show();
+            }
         });
-
-
-
 
         // 데이터베이스 생성
         mDb = AppDatabase.getInstance(getContext());
@@ -517,7 +529,7 @@ public class TimeLineFragment extends Fragment {
                 analyzer.analyze();
 
                 /**
-                 * TODO: 대표이미지 뽑아서 result.setRepImages(...) 로 대표이미지 할당해야함.
+                 * 대표사진 추출
                  */
                 Log.e("LABEL_ANALYZER", "size: " + groups.size());
                 Log.e("LABEL_ANALYZER", analyzer.toString());

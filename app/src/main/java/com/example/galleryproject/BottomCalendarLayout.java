@@ -10,6 +10,8 @@ import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.Interpolator;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -26,20 +28,26 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
+import static android.content.Context.INPUT_METHOD_SERVICE;
+
 public class BottomCalendarLayout extends LinearLayout {
     private RecyclerView monthRecyclerView;
     private RecyclerView.Adapter adapter;
     private LinearLayout bottom_LinearLayout;
     private boolean isExpanded;
 
+    private ImageButton bottomCalendar_yearSaveButton;
     private ImageButton bottomCalendar_yearLeftButton;
     private ImageButton bottomCalendar_yearRightButton;
     private TextView bottom_YearTextView;
+    private EditText bottom_YearEditText;
 
     private Animation slidingDownAnim;
     private Animation slidingUpAnim;
 
     private OnCalendarClickListener listener;
+
+    private InputMethodManager imm;
 
     public BottomCalendarLayout(Context context) {
         super(context);
@@ -51,8 +59,8 @@ public class BottomCalendarLayout extends LinearLayout {
         init(context);
     }
 
-    public void init(Context context){
-        LayoutInflater inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+    public void init(Context context) {
+        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         inflater.inflate(R.layout.bottom_calendar, this, true);
         bottom_LinearLayout = (LinearLayout) findViewById(R.id.bottom_LinearLayout);
 
@@ -60,7 +68,7 @@ public class BottomCalendarLayout extends LinearLayout {
         monthRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), 4));
 
         ArrayList<String> months = new ArrayList<String>();
-        for(int i=1;i<10;i++)
+        for (int i = 1; i < 10; i++)
             months.add(" " + i);
         months.add("10");
         months.add("11");
@@ -98,41 +106,64 @@ public class BottomCalendarLayout extends LinearLayout {
                 SimpleDateFormat yearFormat = new SimpleDateFormat("yyyy", Locale.getDefault());
                 int cur_year = Integer.parseInt(yearFormat.format(currentTime));
 
-                if(!(rep_year_num >= cur_year))
-                    setBottom_YearTextView(String.valueOf(rep_year_num+1));
+                if (!(rep_year_num >= cur_year))
+                    setBottom_YearTextView(String.valueOf(rep_year_num + 1));
                 else
-                    Toast.makeText(getContext(), "지금은 " + cur_year +"년 입니다.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getContext(), "지금은 " + cur_year + "년 입니다.", Toast.LENGTH_LONG).show();
             }
         });
 
         bottom_YearTextView = (TextView) findViewById(R.id.bottom_YearTextView);
+        bottom_YearEditText = (EditText) findViewById(R.id.bottom_YearEditText);
+        bottomCalendar_yearSaveButton = (ImageButton) findViewById(R.id.bottomCalendar_yearSaveButton);
+
+        bottomCalendar_yearSaveButton.setOnClickListener((view)->{
+            bottom_YearTextView.setVisibility(View.VISIBLE);
+            bottom_YearEditText.setVisibility(View.GONE);
+            bottomCalendar_yearSaveButton.setVisibility(View.GONE);
+
+            bottom_YearTextView.setText(bottom_YearEditText.getText().toString());
+            bottom_YearEditText.clearFocus();
+            imm.hideSoftInputFromWindow(bottom_YearEditText.getWindowToken(), 0);
+        });
+
+        imm = (InputMethodManager) context.getSystemService(INPUT_METHOD_SERVICE);
+
+        bottom_YearTextView.setOnClickListener((view) -> {
+            bottom_YearTextView.setVisibility(View.GONE);
+            bottom_YearEditText.setVisibility(View.VISIBLE);
+            bottomCalendar_yearSaveButton.setVisibility(View.VISIBLE);
+
+            bottom_YearEditText.setText(bottom_YearTextView.getText().toString());
+            bottom_YearEditText.requestFocus();
+            imm.showSoftInput(bottom_YearEditText,0);
+        });
 
         Date currentTime = Calendar.getInstance().getTime();
         SimpleDateFormat monthFormat = new SimpleDateFormat("MM", Locale.getDefault());
         String month = monthFormat.format(currentTime);
         SimpleDateFormat yearFormat = new SimpleDateFormat("yyyy", Locale.getDefault());
         String year = yearFormat.format(currentTime);
-
         setBottom_YearTextView(year);
+
     }
 
-    public void setOnCalendarClickListener(OnCalendarClickListener listener){
+    public void setOnCalendarClickListener(OnCalendarClickListener listener) {
         this.listener = listener;
     }
 
-    public void setBottom_YearTextView(String year){
+    public void setBottom_YearTextView(String year) {
         bottom_YearTextView.setText(year);
     }
 
-    public void setVisibility(){
+    public void setVisibility() {
         Log.e("VISIBILITY", "CHANGE" + isExpanded);
-        if(isExpanded) {
+        if (isExpanded) {
 //            bottom_LinearLayout.setVisibility(GONE);
 //            isExpanded = false;
 
             bottom_LinearLayout.startAnimation(slidingUpAnim);
-        }
-        else {
+        } else {
 //            bottom_LinearLayout.setVisibility(VISIBLE);
 //            isExpanded = true;
             bottom_LinearLayout.setVisibility(VISIBLE);
@@ -141,7 +172,7 @@ public class BottomCalendarLayout extends LinearLayout {
         }
     }
 
-    private class SlidingCalendarAnimation implements Animation.AnimationListener{
+    private class SlidingCalendarAnimation implements Animation.AnimationListener {
         @Override
         public void onAnimationStart(Animation animation) {
 
@@ -149,11 +180,10 @@ public class BottomCalendarLayout extends LinearLayout {
 
         @Override
         public void onAnimationEnd(Animation animation) {
-            if(isExpanded) {
+            if (isExpanded) {
                 bottom_LinearLayout.setVisibility(GONE);
                 isExpanded = false;
-            }
-            else {
+            } else {
                 isExpanded = true;
             }
         }
@@ -164,7 +194,7 @@ public class BottomCalendarLayout extends LinearLayout {
         }
     }
 
-    class Adapter extends RecyclerView.Adapter<Adapter.ViewHolder>{
+    class Adapter extends RecyclerView.Adapter<Adapter.ViewHolder> {
         ArrayList<String> months;
 
         public Adapter(ArrayList<String> months) {
@@ -175,7 +205,7 @@ public class BottomCalendarLayout extends LinearLayout {
             public TextView calenderItem = null;
 
             ViewHolder(View itemView) {
-                super(itemView) ;
+                super(itemView);
                 calenderItem = (TextView) itemView.findViewById(R.id.calendarItem);
                 calenderItem.setOnClickListener(new OnClickListener() {
                     @Override

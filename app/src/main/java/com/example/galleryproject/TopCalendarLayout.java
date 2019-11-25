@@ -76,6 +76,10 @@ public class TopCalendarLayout extends LinearLayout {
         }
     }
 
+    public String getYearText(){
+        return yearTextView.getText().toString();
+    }
+
     public void setYearTextView(String year){
         yearTextView.setText(year + "년");
     }
