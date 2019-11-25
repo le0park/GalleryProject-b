@@ -1,19 +1,33 @@
 package com.example.galleryproject.ui.map;
 
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.example.galleryproject.Model.ImageCollection;
+import com.example.galleryproject.ui.timeLine.ImageCollectionLiveData;
+import com.example.galleryproject.ui.timeLine.TimeLineViewModel;
+
+import java.util.List;
+
 public class MapViewModel extends ViewModel {
+    private ImageCollectionLiveData imageCollections;
 
-    private MutableLiveData<String> mText;
+    public ImageCollectionLiveData getImageCollections() {
+        if (imageCollections == null) {
+            synchronized (TimeLineViewModel.class) {
+                if (imageCollections == null) {
+                    imageCollections = new ImageCollectionLiveData();
+                }
+            }
+        }
 
-    public MapViewModel() {
-        mText = new MutableLiveData<>();
-        mText.setValue("This is notifications fragment");
+        return imageCollections;
     }
 
-    public LiveData<String> getText() {
-        return mText;
+    public void insert(ImageCollection item) {
+        imageCollections.add(item);
+    }
+
+    public void insertAll(List<ImageCollection> items) {
+        imageCollections.addAll(items);
     }
 }

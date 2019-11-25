@@ -49,6 +49,7 @@ import com.example.galleryproject.Model.UnitImage;
 import com.example.galleryproject.R;
 import com.example.galleryproject.TopCalendarLayout;
 
+import com.example.galleryproject.Util.DatabaseUtils;
 import com.example.galleryproject.Util.ImageFileLabeler;
 import com.example.galleryproject.ui.survey.SurveyDialogFragment;
 
@@ -111,10 +112,10 @@ public class TimeLineFragment extends Fragment {
                                   .get(TimeLineViewModel.class);
 
 
-        List<ImageCollection> dataset = timeLineViewModel.getImageGroups().getValue();
+        List<ImageCollection> dataset = timeLineViewModel.getImageCollections().getValue();
         adapter = new TimeLineRecyclerViewAdapter(this.getContext(), dataset);
 
-        timeLineViewModel.getImageGroups()
+        timeLineViewModel.getImageCollections()
                 .observe(this, (list) -> {
                     // Update the cached copy of the words in the adapter.
             adapter.notifyDataSetChanged();
@@ -237,7 +238,7 @@ public class TimeLineFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        timeLineViewModel.getImageGroups().clear(true);
+        timeLineViewModel.getImageCollections().clear(true);
         AppExecutors.getInstance()
                     .diskIO()
                     .execute(() -> {
@@ -245,7 +246,7 @@ public class TimeLineFragment extends Fragment {
                         int size = -1;
                         while ((offset == 0 && size == -1) ||
                                (size != 0)) {
-                            List<ImageCollection> collections = getCollectionsFromDbByRange(10, offset);
+                            List<ImageCollection> collections = DatabaseUtils.getCollectionsFromDbByRange(mDb, 10, offset);
 
                             size = collections.size();
                             offset += size;
@@ -296,7 +297,7 @@ public class TimeLineFragment extends Fragment {
     }
 
     @WorkerThread
-    public List<ImageCollection> getCollectionsFromDbByRange(int count, int offset) {
+    public List<ImageCollection> getCollectionsFromDbByRange(AppDatabase mDb, int count, int offset) {
         List<ImageCollection> collections = new ArrayList<>();
         List<DbImageCollection> dbCollections =
                 mDb.dbImageCollectionDao().getRange(count, offset);
