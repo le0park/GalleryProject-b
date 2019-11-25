@@ -50,4 +50,38 @@ public class DatabaseUtils {
 
         return collections;
     }
+
+    @WorkerThread
+    public List<ImageCollection> getCollectionsFromDb(AppDatabase mDb) {
+        List<ImageCollection> collections = new ArrayList<>();
+        List<DbImageCollection> dbCollections =
+                mDb.dbImageCollectionDao().getAll();
+
+        for (DbImageCollection dbCollection : dbCollections) {
+            List<DbImageGroup> dbImageGroups =
+                    mDb.dbImageGroupDao().loadAllWithCollectionId(dbCollection.id);
+
+            List<ImageGroup> imageGroups = new ArrayList<>();
+            for (DbImageGroup group : dbImageGroups) {
+                List<DbImage> dbImages = mDb.dbImageDao()
+                        .loadWithGroupId(group.id);
+
+                List<Image> newImages = dbImages.stream()
+                        .map(DbImageAdapter::new)
+                        .collect(Collectors.toList());
+
+                imageGroups.add(new DbImageGroupAdapter(group, newImages));
+            }
+
+            List<DbImage> dbImages = mDb.dbRepImageDao().getRepImageForCollection(dbCollection.id);
+            List<Image> repImages = dbImages.stream()
+                    .map(DbImageAdapter::new)
+                    .collect(Collectors.toList());
+
+            collections.add(new DbImageCollectionAdapter(dbCollection, imageGroups, repImages));
+        }
+
+        return collections;
+    }
+
 }
