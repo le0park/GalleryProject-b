@@ -114,6 +114,11 @@ public class TimeLineFragment extends Fragment {
                 super.onScrolled(recyclerView, dx, dy);
                 int currentPosition = linearLayoutManager.findFirstVisibleItemPosition();
 
+                if(currentPosition == -1){
+                    Log.e("onScrollPositionError", "error position : " + currentPosition);
+                    return;
+                }
+
                 LocalDateTime top_date = dataset.get(currentPosition).getDate();
                 String top_year = top_date.format(DateTimeFormatter.ofPattern("yyyy"));
                 String top_month = top_date.format(DateTimeFormatter.ofPattern("MM"));
@@ -153,7 +158,6 @@ public class TimeLineFragment extends Fragment {
                 timeLineRecyclerView.setLayoutManager(linearLayoutManager);
 
                 Toast.makeText(getActivity().getApplicationContext(), "Click : " + year + "년 " + month + "월", Toast.LENGTH_LONG).show();
-
             }
         });
 
