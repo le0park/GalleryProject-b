@@ -1,5 +1,6 @@
 package com.example.galleryproject.ui.map;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -22,12 +23,10 @@ import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 
 import com.example.galleryproject.Database.AppDatabase;
-import com.example.galleryproject.Database.AppExecutors;
 import com.example.galleryproject.ImageCollectionViewModel;
 import com.example.galleryproject.Model.Image;
 import com.example.galleryproject.Model.ImageCollection;
 import com.example.galleryproject.R;
-import com.example.galleryproject.Util.DatabaseUtils;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -71,17 +70,19 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         return root;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+    }
+
     private class MarkerItemRenderer extends DefaultClusterRenderer<MarkerItem> {
-        private final IconGenerator mIconGenerator = new IconGenerator(getActivity().getApplicationContext());
-        private final IconGenerator mClusterIconGenerator = new IconGenerator(getActivity().getApplicationContext());
+        private final IconGenerator mIconGenerator = new IconGenerator(getContext());
+        private final IconGenerator mClusterIconGenerator = new IconGenerator(getContext());
         private final ImageView mImageView;
-//        private final TextView mTextView;
         private final ImageView mClusterImageView;
-//        private final TextView mClusterTextView;
         private final int mDimension;
-        Bitmap icon;
         MarkerItemRenderer() {
-            super(getActivity().getApplicationContext(), getMap(), mClusterManager);
+            super(getContext(), getMap(), mClusterManager);
 
             // Group marker layout
             View clusterMarker_rootView = getLayoutInflater().inflate(R.layout.map_marker, null);
@@ -89,14 +90,14 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             mClusterIconGenerator.setBackground(clusterDraw);
             mClusterIconGenerator.setContentView(clusterMarker_rootView);
 
-            mClusterImageView = (ImageView) clusterMarker_rootView.findViewById(R.id.mapMarker_imageView);
+            mClusterImageView = clusterMarker_rootView.findViewById(R.id.mapMarker_imageView);
 
             // Single marker layout
             View singleMarker_rootView = getLayoutInflater().inflate(R.layout.map_marker, null);
             mIconGenerator.setBackground(clusterDraw);
             mIconGenerator.setContentView(singleMarker_rootView);
 
-            mImageView = (ImageView) singleMarker_rootView.findViewById(R.id.mapMarker_imageView);
+            mImageView = singleMarker_rootView.findViewById(R.id.mapMarker_imageView);
             mDimension = (int) getResources().getDimension(R.dimen.custom_profile_image);
         }
 
@@ -105,16 +106,17 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             // Draw a single person.
             // Set the info window to show their name.
 
-            icon = mIconGenerator.makeIcon();
+            Bitmap icon = mIconGenerator.makeIcon();
             markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon)).title(marker.getTitle());
         }
 
         @Override
         protected void onClusterItemRendered(final MarkerItem clusterItem, final Marker marker) {
-            Glide.with(getActivity())
+            Glide.with(getContext())
                  .load(clusterItem.getRepImage().getFile())
                  .apply(new RequestOptions().diskCacheStrategy(DiskCacheStrategy.ALL))
-                 .thumbnail(0.1f)
+                 .fitCenter()
+                 .override(200)
                  .into(new SimpleTarget<Drawable>() {
                     @Override
                     public void onResourceReady(Drawable drawable, Transition<? super Drawable> transition) {
@@ -124,8 +126,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
                         }
 
                         mImageView.setImageDrawable(drawable);
-                        icon = mIconGenerator.makeIcon();
-
+                        Bitmap icon = mIconGenerator.makeIcon();
                         marker.setIcon(BitmapDescriptorFactory.fromBitmap(icon));
                     }
                  });
@@ -136,44 +137,46 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             // Draw multiple people.
             // Note: this method runs on the UI thread. Don't spend too much time in here (like in this example).
 
-
+            Bitmap icon = mIconGenerator.makeIcon();
+            markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon));
         }
 
         @Override
         protected void onClusterRendered(final Cluster<MarkerItem> cluster, final Marker marker) {
-            final List<Drawable> markerPhotos = new ArrayList<>(Math.min(4, cluster.getSize()));
+            final List<Drawable> markerPhotos = new ArrayList<>();
             final int width = mDimension;
             final int height = mDimension;
             for (MarkerItem item : cluster.getItems()) {
                 // Draw 4 at most.
                 if (markerPhotos.size() == 4) break;
                 try {
-                    Glide.with(getActivity().getApplicationContext())
-                            .load(item.getRepImage().getFile())
-                            .diskCacheStrategy(DiskCacheStrategy.ALL)
-                            .thumbnail(0.1f)
-                            .into(new SimpleTarget<Drawable>(){
-                                @Override
-                                public void onResourceReady(@NonNull Drawable resource, @Nullable Transition<? super Drawable> transition) {
-                                    Marker marker = getMarker(item);
-                                    if (marker == null) {
-                                        return;
-                                    }
+                    Glide.with(getContext())
+                         .load(item.getRepImage().getFile())
+                         .diskCacheStrategy(DiskCacheStrategy.ALL)
+                         .override(100)
+                         .into(new SimpleTarget<Drawable>(){
+                             @Override
+                             public void onResourceReady(@NonNull Drawable resource, @Nullable Transition<? super Drawable> transition) {
+                                 Marker marker = getMarker(cluster);
+                                 if (marker == null) {
+                                     return;
+                                 }
 
-                                    resource.setBounds(0, 0, width, height);
-                                    markerPhotos.add(resource);
-                                    MultiDrawable multiDrawable = new MultiDrawable(markerPhotos);
-                                    multiDrawable.setBounds(0, 0, width, height);
+                                 resource.setBounds(0, 0, width, height);
+                                 markerPhotos.add(resource);
 
-                                    mClusterImageView.setImageDrawable(multiDrawable);
-                                    Bitmap icon = mClusterIconGenerator.makeIcon(String.valueOf(cluster.getSize()));
-                                    marker.setIcon(BitmapDescriptorFactory.fromBitmap(icon));
-                                }
-                            });
+                                 MultiDrawable multiDrawable = new MultiDrawable(markerPhotos);
+                                 multiDrawable.setBounds(0, 0, width, height);
+                                 mClusterImageView.setImageDrawable(multiDrawable);
+                                 Bitmap icon = mClusterIconGenerator.makeIcon(String.valueOf(cluster.getSize()));
+                                 marker.setIcon(BitmapDescriptorFactory.fromBitmap(icon));
+                             }
+                         });
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
+
             Bitmap icon = mClusterIconGenerator.makeIcon(String.valueOf(cluster.getSize()));
             marker.setIcon(BitmapDescriptorFactory.fromBitmap(icon));
         }
@@ -233,8 +236,10 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
             getMap().moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(37.715133, 126.734086), 10f));
         }
 
-        mClusterManager = new ClusterManager<>(getActivity().getApplicationContext(), getMap());
+        Context context = getContext();
+        mClusterManager = new ClusterManager<>(context, getMap());
         mClusterManager.setRenderer(new MarkerItemRenderer());
+
         getMap().setOnCameraIdleListener(mClusterManager);
         getMap().setOnMarkerClickListener(mClusterManager);
         getMap().setOnInfoWindowClickListener(mClusterManager);
@@ -246,7 +251,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
     }
 
     public void setUpMap() {
-        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.mapFragment);
+        SupportMapFragment mapFragment =
+                (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.mapFragment);
         mapFragment.getMapAsync(this);
     }
 
@@ -261,54 +267,46 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
         }
         mMap = map;
         initClusterManager(false);
-        AppExecutors.getInstance()
-                .diskIO()
-                .execute(() -> {
-                    int offset = 0;
-                    int size = -1;
-                    while ((offset == 0 && size == -1) ||
-                            (size != 0)) {
-                        List<ImageCollection> clist = DatabaseUtils.getCollectionsFromDbByRange(mDb, 400, offset);
 
-                        size = clist.size();
-                        offset += size;
-                        if (size > 0) {
-                            AppExecutors.getInstance().mainThread().execute(() -> collectionViewModel.insertAll(clist));
-                        }
-                    }
-                });
+        getMap().clear();
+        mClusterManager.clearItems();
 
-        collectionViewModel.getImageCollections().observe(this, (collections) -> {
-            getMap().clear();
-            mClusterManager.clearItems();
+        List<ImageCollection> current = collectionViewModel.getImageCollections().getValue();
+        collections.addAll(current);
 
-            List<MarkerItem> items = new ArrayList<>();
-            for (ImageCollection c: collections) {
-                List<Image> images = c.getRepImages();
-                Image repImage = images.get(0);
-                LatLng location = null;
-                if (images.size() > 0) {
-                    double lat = repImage.getLatitude();
-                    double lng = repImage.getLongitude();
+        List<MarkerItem> items = addCollectionMarkers(collections);
 
-                    if (lat == 0.0 || lng == 0.0) {
-                        continue;
-                    } else {
-                        location = new LatLng(lat, lng);
-                    }
-                }
-                if (location == null) {
+        mClusterManager.addItems(items);
+        Log.e("MARKER_CLUSTER", "DO CLUSTER!");
+        Log.e("MARKER_CLUSTER", collections.size() + "");
+        mClusterManager.cluster();
+    }
+
+    public List<MarkerItem> addCollectionMarkers(List<ImageCollection> collections) {
+        List<MarkerItem> items = new ArrayList<>();
+
+        for (ImageCollection c: collections) {
+            List<Image> images = c.getRepImages();
+            Image repImage = images.get(0);
+
+            LatLng location = null;
+            if (images.size() > 0) {
+                double lat = repImage.getLatitude();
+                double lng = repImage.getLongitude();
+
+                if (lat == 0.0 || lng == 0.0) {
                     continue;
+                } else {
+                    location = new LatLng(lat, lng);
                 }
-
-                items.add(new MarkerItem(location, c));
+            }
+            if (location == null) {
+                continue;
             }
 
-            mClusterManager.addItems(items);
-            Log.e("MARKER_CLUSTER", "DO CLUSTER!");
-            Log.e("MARKER_CLUSTER", collections.size() + "");
-            Log.e("MARKER_CLUSTER", collections.size() + "");
-            mClusterManager.cluster();
-        });
+            items.add(new MarkerItem(location, c));
+        }
+
+        return items;
     }
 }
