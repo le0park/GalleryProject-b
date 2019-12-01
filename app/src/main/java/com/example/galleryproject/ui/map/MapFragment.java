@@ -1,6 +1,7 @@
 package com.example.galleryproject.ui.map;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -9,7 +10,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
@@ -26,6 +26,7 @@ import com.example.galleryproject.Database.AppDatabase;
 import com.example.galleryproject.ImageCollectionViewModel;
 import com.example.galleryproject.Model.Image;
 import com.example.galleryproject.Model.ImageCollection;
+import com.example.galleryproject.PhotoGroupActivity;
 import com.example.galleryproject.R;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -179,6 +180,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
             Bitmap icon = mClusterIconGenerator.makeIcon(String.valueOf(cluster.getSize()));
             marker.setIcon(BitmapDescriptorFactory.fromBitmap(icon));
+
         }
 
         @Override
@@ -190,10 +192,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
     @Override
     public boolean onClusterClick(Cluster<MarkerItem> cluster) {
-        // Show a toast with some info when the cluster is clicked.
-        String firstName = cluster.getItems().iterator().next().getTitle();
-        Toast.makeText(getActivity().getApplicationContext(), cluster.getSize() + " (including " + firstName + ")", Toast.LENGTH_SHORT).show();
-
         // Zoom in the cluster. Need to create LatLngBounds and including all the cluster items
         // inside of bounds, then animate to center of the bounds.
 
@@ -222,8 +220,13 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,
 
     @Override
     public boolean onClusterItemClick(MarkerItem item) {
+        ImageCollection collection = item.getCollection();
         // Does nothing, but you could go into the user's profile page, for example.
-        return false;
+        Intent intent = new Intent(getActivity(), PhotoGroupActivity.class);
+        intent.putExtra("ImageCollection", collection);
+        getActivity().startActivity(intent);
+
+        return true;
     }
 
     @Override

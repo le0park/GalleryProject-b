@@ -8,11 +8,11 @@ import com.google.maps.android.clustering.ClusterItem;
 import java.util.List;
 
 public class MarkerItem implements ClusterItem {
-    private LatLng location;
+    private LatLng position;
     private ImageCollection collection;
 
-    public MarkerItem(LatLng location, ImageCollection collection){
-        this.location = location;
+    public MarkerItem(LatLng position, ImageCollection collection){
+        this.position = position;
         this.collection = collection;
     }
 
@@ -21,19 +21,19 @@ public class MarkerItem implements ClusterItem {
     }
 
     public double getLatitude() {
-        return this.location.latitude;
+        return this.position.latitude;
     }
 
     public void setLatitude(double latitude) {
-        this.location = new LatLng(latitude, getLongitude());
+        this.position = new LatLng(latitude, getLongitude());
     }
 
     public double getLongitude() {
-        return this.location.longitude;
+        return this.position.longitude;
     }
 
     public void setLongitude(double longitude) {
-        this.location = new LatLng(getLatitude(), longitude);
+        this.position = new LatLng(getLatitude(), longitude);
     }
 
     public Image getRepImage() {
@@ -44,13 +44,17 @@ public class MarkerItem implements ClusterItem {
         return null;
     }
 
+    public ImageCollection getCollection() {
+        return this.collection;
+    }
+
     public List<Image> getRepImages() {
         return this.collection.getRepImages();
     }
 
     @Override
     public LatLng getPosition() {
-        return this.location;
+        return this.position;
     }
 
     @Override

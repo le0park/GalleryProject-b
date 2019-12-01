@@ -1,9 +1,6 @@
 package com.example.galleryproject.ui.timeLine;
 
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,57 +8,23 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
-import androidx.annotation.WorkerThread;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.galleryproject.BottomCalendarLayout;
-import com.example.galleryproject.Database.AppDatabase;
-import com.example.galleryproject.Database.AppExecutors;
-import com.example.galleryproject.Database.Entity.DbImage;
-import com.example.galleryproject.Database.Entity.DbImageCollection;
-import com.example.galleryproject.Database.Entity.DbImageGroup;
-import com.example.galleryproject.Database.Entity.DbLabel;
-import com.example.galleryproject.Database.Entity.DbPriority;
-import com.example.galleryproject.Database.Entity.DbRepImage;
 import com.example.galleryproject.ImageCollectionViewModel;
-import com.example.galleryproject.Model.Adapter.DbImageAdapter;
-import com.example.galleryproject.Model.Adapter.DbImageCollectionAdapter;
-import com.example.galleryproject.Model.Adapter.DbImageGroupAdapter;
-import com.example.galleryproject.DeepLearningModel;
-import com.example.galleryproject.Model.Adapter.ImageAdapter;
-import com.example.galleryproject.Model.Adapter.ImageCollectionAdapter;
-import com.example.galleryproject.Model.Adapter.ImageGroupAdapter;
-import com.example.galleryproject.Model.Adapter.LabelAdapter;
-import com.example.galleryproject.Model.Category;
 import com.example.galleryproject.Model.Image;
 import com.example.galleryproject.Model.ImageGroup;
 import com.example.galleryproject.Model.ImageCollection;
-import com.example.galleryproject.Model.ImageGroupLabelAnalyzer;
-import com.example.galleryproject.Model.Label;
-import com.example.galleryproject.Model.LabelGroup;
 import com.example.galleryproject.Model.LocationUtility;
-import com.example.galleryproject.Model.SimGroupAlgorithm;
-import com.example.galleryproject.Model.TimeGroupAlgorithm;
-import com.example.galleryproject.Model.UnitImage;
 import com.example.galleryproject.R;
 import com.example.galleryproject.TopCalendarLayout;
 
-import com.example.galleryproject.Util.ImageFileLabeler;
-import com.example.galleryproject.ui.survey.SurveyDialogFragment;
-
-import org.tensorflow.lite.Interpreter;
-
-import java.io.File;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.stream.Collectors;
 
 import xyz.sangcomz.stickytimelineview.RecyclerSectionItemDecoration;
 import xyz.sangcomz.stickytimelineview.TimeLineRecyclerView;
@@ -75,7 +38,7 @@ public class TimeLineFragment extends Fragment {
 
     private TopCalendarLayout topCalendar;
     private BottomCalendarLayout bottomCalendar;
-    private AppDatabase mDb;
+
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -94,7 +57,7 @@ public class TimeLineFragment extends Fragment {
         collectionViewModel = ViewModelProviders.of(getActivity()).get(ImageCollectionViewModel.class);
 
         List<ImageCollection> dataset = collectionViewModel.getImageCollections().getValue();
-        adapter = new TimeLineRecyclerViewAdapter(this.getContext(), dataset);
+        adapter = new TimeLineRecyclerViewAdapter(getActivity(), dataset);
 
         collectionViewModel.getImageCollections()
                 .observe(this, (list) -> {
@@ -138,8 +101,6 @@ public class TimeLineFragment extends Fragment {
             }
         });
 
-        // 데이터베이스 생성
-        mDb = AppDatabase.getInstance(getContext());
         return root;
     }
 
@@ -155,7 +116,6 @@ public class TimeLineFragment extends Fragment {
             @Override
             public SectionInfo getSectionHeader(int position) {
                 ImageCollection imageCollection = data.get(position);
-//                Drawable dot = ResourcesCompat.getDrawable(getContext().getResources(), R.drawable.dot, null);
 
                 String locationMessage = null;
                 if (imageCollection.getGroups().size() > 0) {
@@ -170,7 +130,7 @@ public class TimeLineFragment extends Fragment {
                     }
                 }
 
-                //TODO dot drwable 수정
+                //TODO dot drawable 수정
                 return new SectionInfo(
                         imageCollection.getDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                         locationMessage,
