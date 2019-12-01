@@ -23,11 +23,13 @@
 
             <ImageButton
                 android:id="@+id/bottomCalendar_yearLeftButton"
-                android:layout_width="@dimen/bottomCalendar_yearButton_width"
-                android:layout_height="@dimen/bottomCalendar_yearButton_height"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
                 android:layout_gravity="center"
                 android:background="@color/mainWhite"
-                android:src="@drawable/calendar_left_icon"/>
+                android:padding="4dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/icons8_chevron_left_50" />
 
             <TextView
                 android:id="@+id/bottom_YearTextView"
@@ -52,11 +54,13 @@
 
             <ImageButton
                 android:id="@+id/bottomCalendar_yearRightButton"
-                android:layout_width="@dimen/bottomCalendar_yearButton_width"
-                android:layout_height="@dimen/bottomCalendar_yearButton_height"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
                 android:layout_gravity="center"
                 android:background="@color/mainWhite"
-                android:src="@drawable/calendar_right_icon"/>
+                android:padding="4dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/icons8_chevron_right_50" />
 
         </LinearLayout>
 

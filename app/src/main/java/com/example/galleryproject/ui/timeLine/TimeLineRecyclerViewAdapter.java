@@ -71,7 +71,13 @@ public class TimeLineRecyclerViewAdapter extends TimeLineRecyclerView.Adapter<Ti
             holder.imageContainer.addItemDecoration(decorator);
         }
 
-        setReadMore(holder.memoView, imageCollections.get(position).getMemo(), 2);
+        String memo = imageCollections.get(position).getMemo();
+        if (memo.isEmpty()) {
+            holder.memoView.setVisibility(View.GONE);
+        } else {
+            holder.memoView.setVisibility(View.VISIBLE);
+            setReadMore(holder.memoView, imageCollections.get(position).getMemo(), 2);
+        }
     }
 
     /**
