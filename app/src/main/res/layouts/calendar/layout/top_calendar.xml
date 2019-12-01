@@ -19,6 +19,7 @@
             android:text="XXXX년"
             android:textSize="@dimen/topCalendar_year_textSize"
             android:textStyle="bold"
+            android:textColor="#9162ea"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -33,6 +34,7 @@
             android:text="X월"
             android:textSize="@dimen/topCalendar_month_textSize"
             android:textStyle="bold"
+            android:textColor="#6951ff"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
