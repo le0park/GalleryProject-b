@@ -26,13 +26,13 @@
 
             app:sectionBackgroundColor="@color/mainGray"
 
-            app:sectionTitleTextColor="#414fca"
-            app:sectionSubTitleTextColor="#d16767"
+            app:sectionTitleTextColor="#9162ea"
+            app:sectionSubTitleTextColor="#9696ff"
 
             app:timeLineColor="@color/color_timeLine_line"
 
-            app:timeLineCircleColor="#51ae45"
-            app:timeLineCircleStrokeColor="#f9f9f9"
+            app:timeLineCircleColor="#9162ea"
+            app:timeLineCircleStrokeColor="@color/mainGray"
 
             app:sectionTitleTextSize="14sp"
             app:sectionSubTitleTextSize="12sp"

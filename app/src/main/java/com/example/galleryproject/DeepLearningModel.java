@@ -28,8 +28,7 @@ public class DeepLearningModel {
     public Interpreter getTfliteInterpreter(String modelPath) {
         try {
             return new Interpreter(loadModelFile(activity, modelPath));
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
@@ -46,11 +45,11 @@ public class DeepLearningModel {
         return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
     }
 
-    public float[][][] parseModelInput(List<double[]> x){
+    public float[][][] parseModelInput(List<double[]> x) {
         float[][][] input = new float[x.size()][4][1];
         for (int i = 0; i < x.size(); i++) {
             for (int j = 0; j < 4; j++) {
-                input[i][j][0] = (float)x.get(i)[j];
+                input[i][j][0] = (float) x.get(i)[j];
             }
         }
         return input;
@@ -61,20 +60,74 @@ public class DeepLearningModel {
         // priority[i][0];
         List<Image> repImages = new ArrayList<>();
         Map<Float, Image> hash = new HashMap<>();
+        Map<Float, Integer> countHash = new HashMap<>();
 
         int priorityInx = 0;
 
-        for(Image image : images){
+        for (Image image : images) {
             hash.put(priority[priorityInx][0], image);
+
+            if (countHash.containsKey(priority[priorityInx][0])) {
+                countHash.put(priority[priorityInx][0], countHash.get(priority[priorityInx][0]) + 1);
+            } else {
+                countHash.put(priority[priorityInx][0], 0);
+            }
+
             priorityInx++;
         }
 
         List<Float> priorities = new ArrayList<>(hash.keySet());
         Collections.sort(priorities, Collections.reverseOrder());
 
-        for (float p: priorities) {
-            repImages.add(hash.get(p));
+
+        if (hash.size() == 1) {
+            int repCount = 0;
+            for (Image image : images) {
+                repImages.add(image);
+                repCount++;
+                if (repCount == 3)
+                    break;
+            }
+            return repImages;
+
+        } else if (hash.size() == 2) {
+            for (float p : priorities) {
+                repImages.add(hash.get(p));
+            }
+            repImages.add(images.get(0));
+            return repImages;
+//            if (images.size() <= 2) {
+//                return repImages;
+//            } else {
+//                if (countHash.get(priorities.get(0)) >= 2) {
+//                    for (int inx = 0; inx < images.size(); inx++) {
+//                        if (priority[inx][0] == priorities.get(0)) {
+//                            repImages.add(images.get(inx));
+//                            return repImages;
+//                        }
+//                    }
+//                } else {
+//                    for (int inx = 0; inx < images.size(); inx++) {
+//                        if (priority[inx][0] == priorities.get(1)) {
+//                            repImages.add(images.get(inx));
+//                            return repImages;
+//                        }
+//                    }
+//                }
+//            }
+        } else {
+            int repCount = 0;
+            for (float p : priorities) {
+                repImages.add(hash.get(p));
+                repCount++;
+                if (repCount == 3)
+                    break;
+            }
         }
+
+//        for (float p : priorities) {
+//            repImages.add(hash.get(p));
+//        }
 
         return repImages;
     }

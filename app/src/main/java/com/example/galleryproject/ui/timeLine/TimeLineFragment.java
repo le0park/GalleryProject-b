@@ -1,6 +1,7 @@
 package com.example.galleryproject.ui.timeLine;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.galleryproject.BottomCalendarLayout;
 import com.example.galleryproject.ImageCollectionViewModel;
@@ -22,6 +24,7 @@ import com.example.galleryproject.R;
 import com.example.galleryproject.TopCalendarLayout;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +43,8 @@ public class TimeLineFragment extends Fragment {
     private BottomCalendarLayout bottomCalendar;
 
 
+    private LinearLayoutManager linearLayoutManager;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,7 +57,8 @@ public class TimeLineFragment extends Fragment {
         View root = inflater.inflate(R.layout.fragment_timeline, container, false);
 
         timeLineRecyclerView = root.findViewById(R.id.timeLineRecyclerView);
-        timeLineRecyclerView.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
+        linearLayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
+        timeLineRecyclerView.setLayoutManager(linearLayoutManager);
 
         collectionViewModel = ViewModelProviders.of(getActivity()).get(ImageCollectionViewModel.class);
 
@@ -67,7 +73,25 @@ public class TimeLineFragment extends Fragment {
 
         timeLineRecyclerView.addItemDecoration(getSectionCallback((ArrayList) dataset));
         timeLineRecyclerView.setAdapter(adapter);
+        timeLineRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener(){
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                int currentPosition = linearLayoutManager.findFirstVisibleItemPosition();
 
+                if(currentPosition == -1){
+                    Log.e("onScrollPositionError", "error position : " + currentPosition);
+                    return;
+                }
+
+                LocalDateTime top_date = dataset.get(currentPosition).getDate();
+                String top_year = top_date.format(DateTimeFormatter.ofPattern("yyyy"));
+                String top_month = top_date.format(DateTimeFormatter.ofPattern("MM"));
+
+                topCalendar.setYearTextView(top_year);
+                topCalendar.setMonthTextView(top_month);
+            }
+        });
 
         topCalendar = root.findViewById(R.id.topCalendar);
         bottomCalendar = root.findViewById(R.id.bottomCalendar);
@@ -87,15 +111,16 @@ public class TimeLineFragment extends Fragment {
                 postYear = postYear.substring(0, postYear.length() - 1);
                 bottomCalendar.setBottom_YearTextView(postYear);
 
-                Toast.makeText(getActivity().getApplicationContext(), "없다임마", Toast.LENGTH_LONG).show();
-            } else { // find position
+                Toast.makeText(getActivity().getApplicationContext(), "찾을 수 없습니다.", Toast.LENGTH_LONG).show();
+            }else { // find position
                 topCalendar.setYearTextView(year);
                 topCalendar.setMonthTextView(month);
 
-                LinearLayoutManager lm = new LinearLayoutManager(getActivity().getApplicationContext(), LinearLayoutManager.VERTICAL, false);
+                linearLayoutManager = new LinearLayoutManager(getActivity().getApplicationContext(), LinearLayoutManager.VERTICAL, false);
                 //offset 1 means 1 pixel
-                lm.scrollToPositionWithOffset(position, 1);
-                timeLineRecyclerView.setLayoutManager(lm);
+                linearLayoutManager.scrollToPositionWithOffset(position, -1);
+
+                timeLineRecyclerView.setLayoutManager(linearLayoutManager);
 
                 Toast.makeText(getActivity().getApplicationContext(), "Click : " + year + "년 " + month + "월", Toast.LENGTH_LONG).show();
             }

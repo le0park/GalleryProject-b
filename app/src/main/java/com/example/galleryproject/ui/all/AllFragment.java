@@ -14,13 +14,19 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.galleryproject.BottomCalendarLayout;
+import com.example.galleryproject.ImageCollectionViewModel;
 import com.example.galleryproject.MainActivity;
 import com.example.galleryproject.Model.Image;
+import com.example.galleryproject.Model.ImageCollection;
+import com.example.galleryproject.Model.ImageGroup;
 import com.example.galleryproject.Model.UnitImage;
 import com.example.galleryproject.OnCalendarClickListener;
 import com.example.galleryproject.OnExpandListener;
@@ -36,29 +42,35 @@ import com.google.firebase.ml.vision.label.FirebaseVisionImageLabeler;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 public class AllFragment extends Fragment {
 
-    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-    private AllViewModel allViewModel;
+    private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+
     private RecyclerView allRecyclerView;
     private AllRecyclerViewAdapter adapter;
 
     private TopCalendarLayout topCalendar;
     private BottomCalendarLayout bottomCalendar;
 
-    File file;
-    File[] listFile;
+    private File file;
+    private File[] listFile;
     private ArrayList<String> filePaths;
-    FirebaseVisionImage firebaseImage;
-    FirebaseVisionImageLabeler labeler;
-    //    TextView textView;
+
+    private List<Image> images;
+    private ImageCollectionViewModel collectionViewModel;
+    private GridLayoutManager gridLayoutManager;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        allViewModel = ViewModelProviders.of(this).get(AllViewModel.class);
+
+        collectionViewModel = ViewModelProviders.of(getActivity()).get(ImageCollectionViewModel.class);
+        gridLayoutManager = new GridLayoutManager(getActivity().getApplicationContext(), 3);
+
         View root = inflater.inflate(R.layout.fragment_all, container, false);
 
         topCalendar = (TopCalendarLayout) root.findViewById(R.id.topCalendar);
@@ -74,30 +86,56 @@ public class AllFragment extends Fragment {
         bottomCalendar.setOnCalendarClickListener(new OnCalendarClickListener() {
             @Override
             public void OnCalendarClick(String year, String month) {
-                //TODO 사진 항목으로 이동시키기
-                Toast.makeText(getContext(), "Click : " + year + "년 " + month + "월", Toast.LENGTH_LONG).show();
                 topCalendar.buttonChange();
                 bottomCalendar.setVisibility();
-                topCalendar.setYearTextView(year);
-                topCalendar.setMonthTextView(month);
+
+                //year, month
+                int position = adapter.getTimePosition(year, month);
+                if (position == -1) { // can't find position
+                    String postYear = topCalendar.getYearText();
+                    postYear = postYear.substring(0, postYear.length() - 1);
+                    bottomCalendar.setBottom_YearTextView(postYear);
+
+                    Toast.makeText(getActivity().getApplicationContext(), "찾을 수 없습니다.", Toast.LENGTH_LONG).show();
+                }else { // find position
+                    topCalendar.setYearTextView(year);
+                    topCalendar.setMonthTextView(month);
+
+                    gridLayoutManager = new GridLayoutManager(getActivity().getApplicationContext(), 3);
+                    //offset 1 means 1 pixel
+                    gridLayoutManager.scrollToPositionWithOffset(position, -1);
+
+                    allRecyclerView.setLayoutManager(gridLayoutManager);
+
+                    Toast.makeText(getActivity().getApplicationContext(), "Click : " + year + "년 " + month + "월", Toast.LENGTH_LONG).show();
+                }
+
             }
         });
-
-        labeler = FirebaseVision.getInstance().getOnDeviceImageLabeler();
 
         allRecyclerView = root.findViewById(R.id.allRecyclerView);
         allRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), 3));
 
-        filePaths = getListOfFile();
+//        filePaths = getListOfFile();
+        List<ImageCollection> dataset = collectionViewModel.getImageCollections().getValue();
 
-        adapter = new AllRecyclerViewAdapter((MainActivity) getActivity(), filePaths);
+        images = getImagesFromImageCollections(dataset);
+        adapter = new AllRecyclerViewAdapter((MainActivity)getActivity(), images);
+
+        collectionViewModel.getImageCollections().observe(this, new Observer<List<ImageCollection>>() {
+            @Override
+            public void onChanged(List<ImageCollection> imageCollections) {
+                images = getImagesFromImageCollections(imageCollections);
+                adapter.notifyDataSetChanged();
+            }
+        });
+
         adapter.setPhotoClickListener(new PhotoClickListener() {
             @Override
             public void onItemClick(int position) {
-//                showObjects(position);
                 Intent intent = new Intent(getActivity().getApplicationContext(), PhotoActivity.class);
 //                Log.e("FILEPATH", filePaths.get(position));
-                String clickPath = filePaths.get(position);
+                String clickPath = images.get(position).getFilePath();
                 Image image = new UnitImage(clickPath);
                 intent.putExtra("Image", image);
 //                intent.putExtra("filePath", filePaths.get(position));
@@ -108,10 +146,39 @@ public class AllFragment extends Fragment {
         allRecyclerView.setAdapter(adapter);
         allRecyclerView.addItemDecoration(new AllRecyclerViewDecoration(10));
 
+        allRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener(){
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+
+                int currentPosition = ((GridLayoutManager)recyclerView.getLayoutManager()).findFirstVisibleItemPosition();
+//                Log.e("GRID position : ", "" + currentPosition);
+                if(!(currentPosition >=0 && currentPosition < images.size())){
+                    return;
+                }
+                LocalDateTime top_date = images.get(currentPosition).getCreationTime();
+                String top_year = top_date.format(DateTimeFormatter.ofPattern("yyyy"));
+                String top_month = top_date.format(DateTimeFormatter.ofPattern("MM"));
+
+                topCalendar.setYearTextView(top_year);
+                topCalendar.setMonthTextView(top_month);
+            }
+        });
 
         return root;
     }
 
+    private List<Image> getImagesFromImageCollections(List<ImageCollection> imageCollections){
+        images = new ArrayList<>();
+        for(ImageCollection ic : imageCollections){
+            for(ImageGroup ig : ic.getGroups()){
+                for(Image im : ig.getImages())
+                    images.add(im);
+            }
+        }
+
+        return images;
+    }
 
     private ArrayList<String> getListOfFile() {
         ArrayList<String> list = new ArrayList<String>();

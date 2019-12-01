@@ -28,8 +28,6 @@ public class TopCalendarLayout extends LinearLayout {
     private boolean isExpanded;
     private OnExpandListener listener;
 
-
-
     public TopCalendarLayout(Context context) {
         super(context);
         init(context);
