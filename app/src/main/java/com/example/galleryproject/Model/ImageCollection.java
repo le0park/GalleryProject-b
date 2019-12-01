@@ -26,7 +26,6 @@ public class ImageCollection implements Parcelable {
         this.repImages = images;
     }
 
-
     public String getMemo() {
         return memo;
     }

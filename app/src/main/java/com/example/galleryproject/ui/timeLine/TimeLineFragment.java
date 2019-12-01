@@ -15,6 +15,7 @@ import androidx.annotation.WorkerThread;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.galleryproject.BottomCalendarLayout;
 import com.example.galleryproject.Database.AppDatabase;
@@ -90,6 +91,8 @@ public class TimeLineFragment extends Fragment {
     private int imageOrderIdx = 0;
     private List<List<Image>> partedImages;
 
+    LinearLayoutManager linearLayoutManager;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -102,7 +105,8 @@ public class TimeLineFragment extends Fragment {
         View root = inflater.inflate(R.layout.fragment_timeline, container, false);
 
         timeLineRecyclerView = root.findViewById(R.id.timeLineRecyclerView);
-        timeLineRecyclerView.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
+        linearLayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
+        timeLineRecyclerView.setLayoutManager(linearLayoutManager);
 
         timeLineViewModel =
                 ViewModelProviders.of(this)
@@ -120,7 +124,20 @@ public class TimeLineFragment extends Fragment {
 
         timeLineRecyclerView.addItemDecoration(getSectionCallback((ArrayList) dataset));
         timeLineRecyclerView.setAdapter(adapter);
+        timeLineRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener(){
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                int currentPosition = linearLayoutManager.findFirstVisibleItemPosition();
 
+                LocalDateTime top_date = dataset.get(currentPosition).getDate();
+                String top_year = top_date.format(DateTimeFormatter.ofPattern("yyyy"));
+                String top_month = top_date.format(DateTimeFormatter.ofPattern("MM"));
+
+                topCalendar.setYearTextView(top_year);
+                topCalendar.setMonthTextView(top_month);
+            }
+        });
 
         topCalendar = root.findViewById(R.id.topCalendar);
         bottomCalendar = root.findViewById(R.id.bottomCalendar);
@@ -140,17 +157,19 @@ public class TimeLineFragment extends Fragment {
                 postYear = postYear.substring(0, postYear.length()-1);
                 bottomCalendar.setBottom_YearTextView(postYear);
 
-                Toast.makeText(getActivity().getApplicationContext(), "없다임마", Toast.LENGTH_LONG).show();
+                Toast.makeText(getActivity().getApplicationContext(), "찾을 수 없습니다.", Toast.LENGTH_LONG).show();
             }else { // find position
                 topCalendar.setYearTextView(year);
                 topCalendar.setMonthTextView(month);
 
-                LinearLayoutManager lm = new LinearLayoutManager(getActivity().getApplicationContext(), LinearLayoutManager.VERTICAL, false);
+                linearLayoutManager = new LinearLayoutManager(getActivity().getApplicationContext(), LinearLayoutManager.VERTICAL, false);
                 //offset 1 means 1 pixel
-                lm.scrollToPositionWithOffset(position, 1);
-                timeLineRecyclerView.setLayoutManager(lm);
+                linearLayoutManager.scrollToPositionWithOffset(position, -1);
+
+                timeLineRecyclerView.setLayoutManager(linearLayoutManager);
 
                 Toast.makeText(getActivity().getApplicationContext(), "Click : " + year + "년 " + month + "월", Toast.LENGTH_LONG).show();
+
             }
         });
 
